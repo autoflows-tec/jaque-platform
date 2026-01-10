@@ -1,5 +1,10 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser()
+
+  // Aguarda a sessão ser carregada (importante para SSR/client hydration)
+  if (process.client) {
+    await new Promise(resolve => setTimeout(resolve, 50))
+  }
 
   // Se está tentando acessar login e já está autenticado, redireciona para index
   if (to.path === '/login' && user.value) {

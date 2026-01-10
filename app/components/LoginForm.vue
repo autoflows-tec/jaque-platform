@@ -7,6 +7,7 @@ const {
   activeTab,
   loginEmail,
   loginPassword,
+  signupName,
   signupEmail,
   signupPassword,
   signupConfirmPassword,
@@ -96,6 +97,14 @@ const {
           class="space-y-4"
         >
           <BaseInput
+            id="signup-name"
+            v-model="signupName"
+            type="text"
+            label="Nome"
+            placeholder="Seu nome completo"
+          />
+
+          <BaseInput
             id="signup-email"
             v-model="signupEmail"
             type="email"
@@ -123,8 +132,9 @@ const {
             type="submit"
             variant="accent"
             class="w-full"
+            :disabled="loading"
           >
-            Criar Conta
+            {{ loading ? 'Criando conta...' : 'Criar Conta' }}
           </BaseButton>
         </form>
       </div>

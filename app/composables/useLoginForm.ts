@@ -1,10 +1,9 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
-import { useRouter } from 'vue-router'
+import { navigateTo } from '#app'
 
 export const useLoginForm = () => {
-  const { login, loading, error } = useAuth()
-  const router = useRouter()
+  const { login, signup, loading, error } = useAuth()
 
   // Estado das abas
   const activeTab = ref<'login' | 'signup'>('login')
@@ -14,6 +13,7 @@ export const useLoginForm = () => {
   const loginPassword = ref('')
 
   // Estado do formulário de cadastro
+  const signupName = ref('')
   const signupEmail = ref('')
   const signupPassword = ref('')
   const signupConfirmPassword = ref('')
@@ -23,18 +23,33 @@ export const useLoginForm = () => {
     const result = await login(loginEmail.value, loginPassword.value)
 
     if (result.success) {
-      // Redirecionar para dashboard ou home
-      router.push('/')
+      // Aguardar um pouco para sessão ser estabelecida
+      await new Promise(resolve => setTimeout(resolve, 500))
+      // Forçar reload completo da página para garantir que o middleware pegue o user
+      window.location.href = '/'
     }
   }
 
-  const handleSignup = () => {
-    console.log('Signup:', {
-      email: signupEmail.value,
-      password: signupPassword.value,
-      confirmPassword: signupConfirmPassword.value
-    })
-    // TODO: Implementar lógica de cadastro
+  const handleSignup = async () => {
+    // Validações básicas
+    if (signupPassword.value !== signupConfirmPassword.value) {
+      error.value = 'As senhas não coincidem'
+      return
+    }
+
+    if (!signupName.value.trim()) {
+      error.value = 'Nome é obrigatório'
+      return
+    }
+
+    const result = await signup(signupEmail.value, signupPassword.value, signupName.value)
+
+    if (result.success) {
+      // Aguardar um pouco para sessão ser estabelecida
+      await new Promise(resolve => setTimeout(resolve, 500))
+      // Forçar reload completo da página para garantir que o middleware pegue o user
+      window.location.href = '/'
+    }
   }
 
   const setActiveTab = (tab: 'login' | 'signup') => {
@@ -46,6 +61,7 @@ export const useLoginForm = () => {
     activeTab,
     loginEmail,
     loginPassword,
+    signupName,
     signupEmail,
     signupPassword,
     signupConfirmPassword,

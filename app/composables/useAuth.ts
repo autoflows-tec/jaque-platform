@@ -1,14 +1,13 @@
 import { ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import { useRouter } from 'vue-router'
+import { navigateTo } from '#app'
+
+const loading = ref(false)
+const error = ref<string | null>(null)
 
 export const useAuth = () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
-  const router = useRouter()
-
-  const loading = ref(false)
-  const error = ref<string | null>(null)
 
   const login = async (email: string, password: string) => {
     try {
@@ -36,6 +35,37 @@ export const useAuth = () => {
     }
   }
 
+  const signup = async (email: string, password: string, name: string) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name
+          }
+        }
+      })
+
+      if (signupError) {
+        error.value = signupError.message
+        return { success: false, error: signupError.message }
+      }
+
+      // Cadastro bem-sucedido
+      return { success: true, user: data.user }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      loading.value = false
+    }
+  }
+
   const logout = async () => {
     try {
       loading.value = true
@@ -48,7 +78,7 @@ export const useAuth = () => {
         return { success: false, error: logoutError.message }
       }
 
-      router.push('/login')
+      await navigateTo('/login')
       return { success: true }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer logout'
@@ -64,6 +94,7 @@ export const useAuth = () => {
     loading,
     error,
     login,
+    signup,
     logout
   }
 }

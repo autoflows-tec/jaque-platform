@@ -6,9 +6,10 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   css: ['~/assets/css/main.css'],
   supabase: {
-    redirect: false
-  },
-  router: {
-    middleware: ['auth']
+    redirect: false,
+    cookieOptions: {
+      maxAge: 60 * 60 * 8, // 8 horas
+      sameSite: 'lax'
+    }
   }
 })
