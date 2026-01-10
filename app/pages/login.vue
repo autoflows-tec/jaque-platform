@@ -1,0 +1,20 @@
+<script setup lang="ts">
+import LoginForm from '~/components/LoginForm.vue'
+</script>
+
+<template>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-foreground mb-2">
+          21 Dias
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          Alimentação Ancestral
+        </p>
+      </div>
+
+      <LoginForm />
+    </div>
+  </div>
+</template>
