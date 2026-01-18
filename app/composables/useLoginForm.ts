@@ -47,8 +47,8 @@ export const useLoginForm = () => {
     if (result.success) {
       // Aguardar um pouco para sessão ser estabelecida
       await new Promise(resolve => setTimeout(resolve, 500))
-      // Forçar reload completo da página para garantir que o middleware pegue o user
-      window.location.href = '/'
+      // Redirecionar para quiz após cadastro
+      window.location.href = '/quiz'
     }
   }
 
