@@ -6,7 +6,7 @@ import { QUIZ_QUESTIONS } from '../../shared/constants/quizQuestions'
 import type { QuizResponses } from '../../shared/types/Quiz'
 
 definePageMeta({
-  layout: false
+  layout: 'main-layout'
 })
 
 const quizStore = useQuizStore()
@@ -87,29 +87,29 @@ const updateResponse = (questionId: string, value: string | string[]) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-    <!-- Header fixo -->
-    <div class="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border z-10">
-      <div class="max-w-3xl mx-auto px-4 py-4">
-        <div class="flex items-center justify-between mb-2">
-          <h1 class="text-xl font-bold text-foreground">Quiz de Avaliação</h1>
-          <span class="text-sm text-muted-foreground">
-            {{ currentStep + 1 }} / {{ totalQuestions }}
-          </span>
+  <div class="quiz-page">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-foreground mb-2">Quiz de Avaliação</h1>
+          <p class="text-muted-foreground">
+            Pergunta {{ currentStep + 1 }} de {{ totalQuestions }}
+          </p>
         </div>
+      </div>
 
-        <!-- Barra de progresso -->
-        <div class="w-full bg-muted rounded-full h-2 overflow-hidden">
-          <div
-            class="bg-primary h-full transition-all duration-300 ease-out"
-            :style="{ width: `${progress}%` }"
-          />
-        </div>
+      <!-- Barra de progresso -->
+      <div class="w-full bg-muted rounded-full h-3 overflow-hidden">
+        <div
+          class="bg-primary h-full transition-all duration-300 ease-out"
+          :style="{ width: `${progress}%` }"
+        />
       </div>
     </div>
 
     <!-- Conteúdo -->
-    <div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="max-w-3xl">
       <div class="bg-card rounded-lg shadow-lg border border-border p-6 md:p-8">
         <!-- Pergunta atual -->
         <QuizQuestion
