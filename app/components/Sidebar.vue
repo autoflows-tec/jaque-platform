@@ -27,7 +27,7 @@ const menuItems: MenuItem[] = [
   { name: 'Home', path: '/', icon: HomeIcon },
   { name: 'Aulas', path: '/aulas', icon: AcademicCapIcon },
   { name: 'Quiz', path: '/quiz', icon: QuestionMarkCircleIcon },
-  { name: '21 Dias', path: '/21-dias', icon: CalendarDaysIcon },
+  // { name: '21 Dias', path: '/21-dias', icon: CalendarDaysIcon }, // Temporariamente oculto
   { name: 'Comunidade', path: '/comunidade', icon: UserGroupIcon },
   { name: 'Receitas', path: '/receitas', icon: ClipboardDocumentListIcon },
   { name: 'Lista de Compras', path: '/lista-compras', icon: ShoppingCartIcon },
