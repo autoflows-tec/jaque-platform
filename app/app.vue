@@ -16,10 +16,11 @@ const hasRedirectedToQuiz = ref(false)
 watch(user, async (newUser) => {
   if (newUser && !hasCheckedQuiz.value) {
     await userStore.fetchProfile()
-    await quizStore.fetchQuizResponse()
+    await quizStore.fetchQuizHistory() // Buscar histórico ao invés de quiz único
     hasCheckedQuiz.value = true
 
     // Verificar se precisa redirecionar para quiz APENAS UMA VEZ
+    // Redireciona apenas se NÃO tiver NENHUM quiz completado
     if (!quizStore.hasCompletedQuiz && !hasRedirectedToQuiz.value) {
       const currentPath = route.path
       if (currentPath !== '/quiz' && currentPath !== '/login') {

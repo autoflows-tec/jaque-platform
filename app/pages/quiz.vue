@@ -53,7 +53,7 @@ const previousQuestion = () => {
   }
 }
 
-// Finalizar quiz
+// Finalizar quiz (sempre criar NOVO registro)
 const submitQuiz = async () => {
   // Validar se todas as perguntas foram respondidas
   const allAnswered = QUIZ_QUESTIONS.every(q => {
@@ -69,12 +69,12 @@ const submitQuiz = async () => {
     return
   }
 
-  // Salvar no Supabase
-  const result = await quizStore.saveQuizResponse(responses.value as QuizResponses, true)
+  // Criar NOVO quiz no Supabase (nunca atualiza)
+  const result = await quizStore.createQuizResponse(responses.value as QuizResponses, true)
 
   if (result.success) {
-    // Redirecionar para home após sucesso
-    router.push('/')
+    // Redirecionar para perfil após sucesso
+    router.push('/perfil')
   } else {
     alert('Erro ao salvar quiz. Tente novamente.')
   }
@@ -84,21 +84,6 @@ const submitQuiz = async () => {
 const updateResponse = (questionId: string, value: string | string[]) => {
   responses.value[questionId as keyof QuizResponses] = value as any
 }
-
-// Carregar quiz existente (se houver)
-onMounted(async () => {
-  await quizStore.fetchQuizResponse()
-
-  // Se já completou o quiz, redireciona para home
-  if (quizStore.hasCompletedQuiz) {
-    router.push('/')
-  }
-
-  // Se tem quiz em andamento, carregar respostas
-  if (quizStore.quizResponse?.responses) {
-    responses.value = { ...quizStore.quizResponse.responses }
-  }
-})
 </script>
 
 <template>

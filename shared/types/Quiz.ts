@@ -154,6 +154,28 @@ export interface QuizResponse {
 }
 
 // =====================================================
+// INTERFACE: Item do histórico de quizzes (resumo)
+// =====================================================
+
+export interface QuizHistoryItem {
+  id: number
+  created_at: string
+  total_score: number
+  is_completed: boolean
+}
+
+// =====================================================
+// TYPE: Input para criar novo quiz
+// =====================================================
+
+export interface QuizCreateInput {
+  user_id: string
+  responses: QuizResponses
+  total_score: number
+  is_completed: boolean
+}
+
+// =====================================================
 // MAPA DE PONTUAÇÕES (para cálculo)
 // =====================================================
 
