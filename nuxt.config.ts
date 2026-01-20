@@ -5,6 +5,10 @@ export default defineNuxtConfig({
   ssr: false,
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@pinia/nuxt'],
   css: ['~/assets/css/main.css'],
+  app: {
+    pageTransition: false,
+    layoutTransition: false
+  },
   supabase: {
     redirect: false,
     cookieOptions: {
