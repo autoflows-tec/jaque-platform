@@ -13,12 +13,9 @@ export const useUserStore = defineStore('user', () => {
     const userId = user.value?.id || user.value?.sub
 
     if (!userId) {
-      console.log('❌ fetchProfile: user ID não encontrado', user.value)
       profile.value = null
       return
     }
-
-    console.log('🔍 fetchProfile: buscando perfil para user_id:', userId)
 
     loading.value = true
     error.value = null
@@ -30,14 +27,11 @@ export const useUserStore = defineStore('user', () => {
         .eq('user_id', userId)
         .single()
 
-      console.log('📦 Resultado da query:', { data, error: fetchError })
-
       if (fetchError) throw fetchError
 
       profile.value = data
-      console.log('✅ Profile salvo no store:', profile.value)
     } catch (err: any) {
-      console.error('❌ Erro ao buscar profile:', err)
+      console.error('Erro ao buscar profile:', err)
       error.value = err.message
       profile.value = null
     } finally {
