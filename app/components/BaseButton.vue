@@ -2,7 +2,7 @@
 import { withDefaults, defineProps } from 'vue'
 
 interface Props {
-  variant?: 'primary' | 'secondary' | 'accent' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'accent' | 'ghost' | 'outline'
   type?: 'button' | 'submit' | 'reset'
   disabled?: boolean
 }
@@ -17,7 +17,8 @@ const variantClasses = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
   secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
   accent: 'bg-accent text-accent-foreground hover:bg-accent/90',
-  ghost: 'bg-transparent hover:bg-accent/10 text-foreground'
+  ghost: 'bg-transparent hover:bg-accent/10 text-foreground',
+  outline: 'border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground'
 }
 </script>
 
