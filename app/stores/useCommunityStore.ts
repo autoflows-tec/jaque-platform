@@ -22,25 +22,26 @@ export const useCommunityStore = defineStore('community', () => {
     try {
       const userId = user.value?.id || user.value?.sub
 
-      // Query principal: buscar posts com autor
+      // Query principal: buscar posts
       const { data: postsData, error: fetchError } = await supabase
         .from('community_posts')
-        .select(`
-          *,
-          author:profiles!community_posts_user_id_fkey (
-            name,
-            user_id
-          )
-        `)
+        .select('*')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
       if (fetchError) throw fetchError
 
-      // Para cada post, verificar se o usuário atual curtiu
+      // Para cada post, buscar autor e verificar se o usuário atual curtiu
       const postsWithLikeStatus = await Promise.all(
         (postsData || []).map(async (post) => {
+          // Buscar dados do autor
+          const { data: authorData } = await supabase
+            .from('profiles')
+            .select('name, user_id')
+            .eq('user_id', post.user_id)
+            .single()
+
           let userHasLiked = false
 
           if (userId) {
@@ -56,6 +57,7 @@ export const useCommunityStore = defineStore('community', () => {
 
           return {
             ...post,
+            author: authorData || { name: null, user_id: post.user_id },
             user_has_liked: userHasLiked
           }
         })
@@ -98,21 +100,28 @@ export const useCommunityStore = defineStore('community', () => {
       const { data, error: insertError } = await supabase
         .from('community_posts')
         .insert(input)
-        .select(`
-          *,
-          author:profiles!community_posts_user_id_fkey (
-            name,
-            user_id
-          )
-        `)
+        .select('*')
         .single()
 
       if (insertError) throw insertError
 
-      // Adicionar no início do array
-      posts.value = [{ ...data, user_has_liked: false }, ...posts.value]
+      // Buscar dados do autor
+      const { data: authorData } = await supabase
+        .from('profiles')
+        .select('name, user_id')
+        .eq('user_id', data.user_id)
+        .single()
 
-      return { success: true, data }
+      const postWithAuthor = {
+        ...data,
+        author: authorData || { name: null, user_id: data.user_id },
+        user_has_liked: false
+      }
+
+      // Adicionar no início do array
+      posts.value = [postWithAuthor, ...posts.value]
+
+      return { success: true, data: postWithAuthor }
     } catch (err: any) {
       console.error('Erro ao criar post:', err)
       error.value = err.message
@@ -218,21 +227,31 @@ export const useCommunityStore = defineStore('community', () => {
   // Buscar comentários de um post
   const fetchComments = async (postId: number) => {
     try {
-      const { data, error: fetchError } = await supabase
+      const { data: commentsData, error: fetchError } = await supabase
         .from('community_post_comments')
-        .select(`
-          *,
-          author:profiles!community_post_comments_user_id_fkey (
-            name,
-            user_id
-          )
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
 
       if (fetchError) throw fetchError
 
-      return data as CommunityPostCommentWithAuthor[]
+      // Para cada comentário, buscar dados do autor
+      const commentsWithAuthor = await Promise.all(
+        (commentsData || []).map(async (comment) => {
+          const { data: authorData } = await supabase
+            .from('profiles')
+            .select('name, user_id')
+            .eq('user_id', comment.user_id)
+            .single()
+
+          return {
+            ...comment,
+            author: authorData || { name: null, user_id: comment.user_id }
+          }
+        })
+      )
+
+      return commentsWithAuthor as CommunityPostCommentWithAuthor[]
     } catch (err: any) {
       console.error('Erro ao buscar comentários:', err)
       error.value = err.message
@@ -259,16 +278,22 @@ export const useCommunityStore = defineStore('community', () => {
       const { data, error: insertError } = await supabase
         .from('community_post_comments')
         .insert(input)
-        .select(`
-          *,
-          author:profiles!community_post_comments_user_id_fkey (
-            name,
-            user_id
-          )
-        `)
+        .select('*')
         .single()
 
       if (insertError) throw insertError
+
+      // Buscar dados do autor
+      const { data: authorData } = await supabase
+        .from('profiles')
+        .select('name, user_id')
+        .eq('user_id', data.user_id)
+        .single()
+
+      const commentWithAuthor = {
+        ...data,
+        author: authorData || { name: null, user_id: data.user_id }
+      }
 
       // Atualizar contador local
       const post = posts.value.find(p => p.id === postId)
@@ -276,7 +301,7 @@ export const useCommunityStore = defineStore('community', () => {
         post.comments_count++
       }
 
-      return { success: true, data }
+      return { success: true, data: commentWithAuthor }
     } catch (err: any) {
       console.error('Erro ao criar comentário:', err)
       error.value = err.message
