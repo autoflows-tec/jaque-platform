@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseInput from '~/components/BaseInput.vue'
 import BaseButton from '~/components/BaseButton.vue'
+import { useImageUpload } from '~/composables/useImageUpload'
 import type { Module, ModuleCreateInput, ModuleUpdateInput } from '../../shared/types/Module'
 
 interface AdminModuleFormProps {
@@ -16,6 +17,8 @@ interface AdminModuleFormEmits {
 const props = defineProps<AdminModuleFormProps>()
 const emit = defineEmits<AdminModuleFormEmits>()
 
+const { uploading, uploadImage, deleteImage } = useImageUpload()
+
 const formData = ref({
   title: '',
   description: '',
@@ -23,6 +26,10 @@ const formData = ref({
   order_index: 0,
   is_published: false
 })
+
+const selectedFile = ref<File | null>(null)
+const previewUrl = ref<string>('')
+const oldThumbnailUrl = ref<string>('')
 
 const isEditMode = computed(() => !!props.module)
 
@@ -34,6 +41,9 @@ const resetForm = () => {
     order_index: 0,
     is_published: false
   }
+  selectedFile.value = null
+  previewUrl.value = ''
+  oldThumbnailUrl.value = ''
 }
 
 // Carregar dados do módulo quando estiver editando
@@ -46,21 +56,64 @@ watch(() => props.module, (newModule) => {
       order_index: newModule.order_index,
       is_published: newModule.is_published
     }
+    oldThumbnailUrl.value = newModule.thumbnail_url || ''
+    previewUrl.value = newModule.thumbnail_url || ''
   } else {
     resetForm()
   }
 }, { immediate: true })
 
-const handleSubmit = () => {
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    selectedFile.value = file
+
+    // Criar preview local
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewUrl.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removeImage = () => {
+  selectedFile.value = null
+  previewUrl.value = ''
+  formData.value.thumbnail_url = ''
+}
+
+const handleSubmit = async () => {
   if (!formData.value.title.trim()) {
     alert('Título é obrigatório')
     return
   }
 
+  let thumbnailUrl = formData.value.thumbnail_url
+
+  // Se selecionou nova imagem, fazer upload
+  if (selectedFile.value) {
+    const result = await uploadImage(selectedFile.value, 'thumbnails', 'modules')
+
+    if (!result.success) {
+      alert(result.error || 'Erro ao fazer upload da imagem')
+      return
+    }
+
+    thumbnailUrl = result.url || null
+
+    // Se está editando e tinha imagem antiga, deletar do storage
+    if (isEditMode.value && oldThumbnailUrl.value && oldThumbnailUrl.value !== thumbnailUrl) {
+      await deleteImage(oldThumbnailUrl.value)
+    }
+  }
+
   const data = {
     title: formData.value.title,
     description: formData.value.description || null,
-    thumbnail_url: formData.value.thumbnail_url || null,
+    thumbnail_url: thumbnailUrl || null,
     order_index: formData.value.order_index,
     is_published: formData.value.is_published
   }
@@ -135,13 +188,82 @@ const handleClose = () => {
             />
           </div>
 
-          <BaseInput
-            id="module-thumbnail"
-            v-model="formData.thumbnail_url"
-            type="url"
-            label="URL da Imagem de Capa"
-            placeholder="https://exemplo.com/imagem.jpg"
-          />
+          <!-- Upload de Imagem -->
+          <div>
+            <label class="block text-sm font-medium text-foreground mb-2">
+              Imagem de Capa
+            </label>
+
+            <!-- Preview da imagem -->
+            <div v-if="previewUrl" class="mb-3 relative">
+              <img
+                :src="previewUrl"
+                alt="Preview"
+                class="w-full h-48 object-cover rounded-lg border border-border"
+              />
+              <button
+                type="button"
+                @click="removeImage"
+                class="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-2 hover:bg-destructive/90 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Botão de upload -->
+            <label
+              for="module-thumbnail-upload"
+              class="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+              :class="{ 'opacity-50 cursor-not-allowed': uploading }"
+            >
+              <svg
+                v-if="!uploading"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-5 h-5 text-muted-foreground"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                />
+              </svg>
+              <div
+                v-else
+                class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"
+              ></div>
+              <span class="text-sm text-muted-foreground">
+                {{ uploading ? 'Fazendo upload...' : previewUrl ? 'Alterar imagem' : 'Escolher imagem do computador' }}
+              </span>
+            </label>
+            <input
+              id="module-thumbnail-upload"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              class="hidden"
+              :disabled="uploading"
+              @change="handleFileSelect"
+            />
+            <p class="text-xs text-muted-foreground mt-2">
+              Formatos aceitos: JPG, PNG, WebP. Tamanho máximo: 5MB.
+            </p>
+          </div>
 
           <BaseInput
             id="module-order"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import LessonCard from '~/components/LessonCard.vue'
+import ModulePlayerView from '~/components/ModulePlayerView.vue'
 import BaseButton from '~/components/BaseButton.vue'
 import type { Module } from '../../shared/types/Module'
 import type { Lesson } from '../../shared/types/Lesson'
@@ -17,15 +18,24 @@ interface ModuleCardEmits {
   (e: 'editLesson', lesson: Lesson): void
   (e: 'deleteLesson', lessonId: number, moduleId: number): void
   (e: 'playLesson', lesson: Lesson): void
+  (e: 'lessonComplete', lessonId: number): void
 }
 
 const props = defineProps<ModuleCardProps>()
 const emit = defineEmits<ModuleCardEmits>()
 
 const isExpanded = ref(false)
+const viewMode = ref<'list' | 'player'>('list') // 'list' ou 'player'
 
 const toggleExpand = () => {
   isExpanded.value = !isExpanded.value
+
+  // Se tem aulas com vídeo, abrir em modo player
+  if (isExpanded.value && hasLessonsWithVideo.value) {
+    viewMode.value = 'player'
+  } else {
+    viewMode.value = 'list'
+  }
 }
 
 const handleEditModule = () => {
@@ -49,6 +59,20 @@ const publishedLessons = computed(() => {
 const lessonsToShow = computed(() => {
   return props.isAdmin ? props.lessons : publishedLessons.value
 })
+
+// Verificar se tem aulas com vídeo
+const hasLessonsWithVideo = computed(() => {
+  return lessonsToShow.value.some(lesson => lesson.panda_video_url && lesson.panda_video_url.trim() !== '')
+})
+
+// Índice da primeira aula com vídeo
+const firstLessonWithVideoIndex = computed(() => {
+  return lessonsToShow.value.findIndex(lesson => lesson.panda_video_url && lesson.panda_video_url.trim() !== '')
+})
+
+const handleLessonComplete = (lessonId: number) => {
+  emit('lessonComplete', lessonId)
+}
 </script>
 
 <template>
@@ -161,75 +185,88 @@ const lessonsToShow = computed(() => {
       </div>
     </div>
 
-    <!-- Lista de aulas (expandível) -->
-    <div
-      v-if="isExpanded"
-      class="lessons-list border-t border-border bg-muted/20 p-6"
-    >
-      <div class="space-y-3">
-        <!-- Botão adicionar aula (visível apenas para admin) -->
-        <div v-if="isAdmin" class="mb-4">
-          <BaseButton
-            variant="outline"
-            class="w-full"
-            @click="handleAddLesson"
+    <!-- Conteúdo expandido (Player View ou Lista) -->
+    <div v-if="isExpanded" class="border-t border-border">
+      <!-- Modo Player: Layout 2 colunas com player de vídeo -->
+      <ModulePlayerView
+        v-if="viewMode === 'player' && hasLessonsWithVideo"
+        :module="module"
+        :lessons="lessonsToShow"
+        :initial-lesson-index="firstLessonWithVideoIndex >= 0 ? firstLessonWithVideoIndex : 0"
+        @close="isExpanded = false"
+        @lesson-complete="handleLessonComplete"
+      />
+
+      <!-- Modo Lista: Lista simples de aulas (fallback para módulos sem vídeo) -->
+      <div
+        v-else
+        class="lessons-list bg-muted/20 p-6"
+      >
+        <div class="space-y-3">
+          <!-- Botão adicionar aula (visível apenas para admin) -->
+          <div v-if="isAdmin" class="mb-4">
+            <BaseButton
+              variant="outline"
+              class="w-full"
+              @click="handleAddLesson"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-5 h-5 mr-2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+              Adicionar Aula
+            </BaseButton>
+          </div>
+
+          <!-- Lista de aulas -->
+          <LessonCard
+            v-for="lesson in lessonsToShow"
+            :key="lesson.id"
+            :lesson="lesson"
+            :is-admin="isAdmin"
+            @edit="emit('editLesson', lesson)"
+            @delete="emit('deleteLesson', lesson.id, module.id)"
+            @play="emit('playLesson', lesson)"
+          />
+
+          <!-- Empty state -->
+          <div
+            v-if="lessonsToShow.length === 0"
+            class="text-center py-8 text-muted-foreground"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              stroke-width="2"
+              stroke-width="1.5"
               stroke="currentColor"
-              class="w-5 h-5 mr-2"
+              class="w-12 h-12 mx-auto mb-3 opacity-50"
             >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"
               />
             </svg>
-            Adicionar Aula
-          </BaseButton>
-        </div>
-
-        <!-- Lista de aulas -->
-        <LessonCard
-          v-for="lesson in lessonsToShow"
-          :key="lesson.id"
-          :lesson="lesson"
-          :is-admin="isAdmin"
-          @edit="emit('editLesson', lesson)"
-          @delete="emit('deleteLesson', lesson.id, module.id)"
-          @play="emit('playLesson', lesson)"
-        />
-
-        <!-- Empty state -->
-        <div
-          v-if="lessonsToShow.length === 0"
-          class="text-center py-8 text-muted-foreground"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-12 h-12 mx-auto mb-3 opacity-50"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z"
-            />
-          </svg>
-          <p class="text-sm">
-            {{ isAdmin ? 'Nenhuma aula cadastrada ainda' : 'Nenhuma aula disponível' }}
-          </p>
+            <p class="text-sm">
+              {{ isAdmin ? 'Nenhuma aula cadastrada ainda' : 'Nenhuma aula disponível' }}
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { useImageUpload } from '~/composables/useImageUpload'
 import type {
   RecipeWithFavorite,
   RecipeCreateInput,
@@ -23,6 +24,8 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const { uploading, uploadImage, deleteImage } = useImageUpload()
+
 const formData = ref({
   title: '',
   description: '',
@@ -42,6 +45,9 @@ const formData = ref({
 const newIngredient = ref({ item: '', amount: '' })
 const newInstruction = ref('')
 const newTag = ref('')
+const selectedFile = ref<File | null>(null)
+const previewUrl = ref<string>('')
+const oldImageUrl = ref<string>('')
 
 const isEditMode = computed(() => !!props.recipe)
 
@@ -64,6 +70,9 @@ const resetForm = () => {
   newIngredient.value = { item: '', amount: '' }
   newInstruction.value = ''
   newTag.value = ''
+  selectedFile.value = null
+  previewUrl.value = ''
+  oldImageUrl.value = ''
 }
 
 // Carregar dados da receita quando estiver editando
@@ -84,10 +93,34 @@ watch(() => props.recipe, (newRecipe) => {
       tags: newRecipe.tags ? [...newRecipe.tags] : [],
       is_published: newRecipe.is_published
     }
+    oldImageUrl.value = newRecipe.image_url || ''
+    previewUrl.value = newRecipe.image_url || ''
   } else {
     resetForm()
   }
 }, { immediate: true })
+
+const handleFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    selectedFile.value = file
+
+    // Criar preview local
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewUrl.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removeImage = () => {
+  selectedFile.value = null
+  previewUrl.value = ''
+  formData.value.image_url = ''
+}
 
 // Adicionar ingrediente
 const addIngredient = () => {
@@ -128,7 +161,7 @@ const removeTag = (index: number) => {
   formData.value.tags.splice(index, 1)
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!formData.value.title.trim()) {
     alert('Título é obrigatório')
     return
@@ -144,10 +177,29 @@ const handleSubmit = () => {
     return
   }
 
+  let imageUrl = formData.value.image_url
+
+  // Se selecionou nova imagem, fazer upload
+  if (selectedFile.value) {
+    const result = await uploadImage(selectedFile.value, 'thumbnails', 'recipes')
+
+    if (!result.success) {
+      alert(result.error || 'Erro ao fazer upload da imagem')
+      return
+    }
+
+    imageUrl = result.url || null
+
+    // Se está editando e tinha imagem antiga, deletar do storage
+    if (isEditMode.value && oldImageUrl.value && oldImageUrl.value !== imageUrl) {
+      await deleteImage(oldImageUrl.value)
+    }
+  }
+
   const data = {
     title: formData.value.title,
     description: formData.value.description || null,
-    image_url: formData.value.image_url || null,
+    image_url: imageUrl || null,
     category: formData.value.category,
     difficulty: formData.value.difficulty,
     prep_time_minutes: formData.value.prep_time_minutes,
@@ -224,17 +276,68 @@ const handleClose = () => {
               ></textarea>
             </div>
 
-            <!-- URL da imagem -->
+            <!-- Upload de Imagem -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-1">
-                URL da Imagem
+              <label class="block text-sm font-medium text-foreground mb-2">
+                Imagem da Receita
+              </label>
+
+              <!-- Preview da imagem -->
+              <div v-if="previewUrl" class="mb-3 relative">
+                <img
+                  :src="previewUrl"
+                  alt="Preview"
+                  class="w-full h-48 object-cover rounded-lg border border-border"
+                />
+                <button
+                  type="button"
+                  @click="removeImage"
+                  class="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-2 hover:bg-destructive/90 transition-colors"
+                >
+                  <XMarkIcon class="w-5 h-5" />
+                </button>
+              </div>
+
+              <!-- Botão de upload -->
+              <label
+                for="recipe-image-upload"
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors"
+                :class="{ 'opacity-50 cursor-not-allowed': uploading }"
+              >
+                <svg
+                  v-if="!uploading"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="w-5 h-5 text-muted-foreground"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                  />
+                </svg>
+                <div
+                  v-else
+                  class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"
+                ></div>
+                <span class="text-sm text-muted-foreground">
+                  {{ uploading ? 'Fazendo upload...' : previewUrl ? 'Alterar imagem' : 'Escolher imagem do computador' }}
+                </span>
               </label>
               <input
-                v-model="formData.image_url"
-                type="url"
-                class="w-full px-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="https://..."
+                id="recipe-image-upload"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                class="hidden"
+                :disabled="uploading"
+                @change="handleFileSelect"
               />
+              <p class="text-xs text-muted-foreground mt-2">
+                Formatos aceitos: JPG, PNG, WebP. Tamanho máximo: 5MB.
+              </p>
             </div>
 
             <!-- Grid: Categoria, Dificuldade -->

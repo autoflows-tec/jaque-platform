@@ -2,6 +2,7 @@
 import ModuleCard from '~/components/ModuleCard.vue'
 import AdminModuleForm from '~/components/AdminModuleForm.vue'
 import AdminLessonForm from '~/components/AdminLessonForm.vue'
+import VideoPlayerModal from '~/components/VideoPlayerModal.vue'
 import BaseButton from '~/components/BaseButton.vue'
 import { useModulesStore } from '~/stores/useModulesStore'
 import { useUserStore } from '~/stores/useUserStore'
@@ -18,8 +19,10 @@ const userStore = useUserStore()
 // Estados dos modais
 const showModuleForm = ref(false)
 const showLessonForm = ref(false)
+const showVideoModal = ref(false)
 const editingModule = ref<Module | null>(null)
 const editingLesson = ref<Lesson | null>(null)
+const selectedLesson = ref<Lesson | null>(null)
 const selectedModuleId = ref<number>(0)
 
 // Verificar se é admin
@@ -114,11 +117,30 @@ const handleLessonFormSubmit = async (data: any) => {
   }
 }
 
-// Handler de play (preparado para futura integração com Panda Video)
+// Handler de play - integração com Panda Video
 const handlePlayLesson = (lesson: Lesson) => {
-  console.log('Play lesson:', lesson)
-  // TODO: Implementar player de vídeo quando integração com Panda Video estiver pronta
-  alert(`Vídeo "${lesson.title}" será reproduzido aqui quando a integração com Panda Video estiver ativa!`)
+  // Verificar se a aula tem vídeo configurado
+  if (!lesson.panda_video_url || lesson.panda_video_url.trim() === '') {
+    alert(`A aula "${lesson.title}" ainda não possui um vídeo configurado. Entre em contato com o administrador.`)
+    return
+  }
+
+  // Abrir modal de vídeo
+  selectedLesson.value = lesson
+  showVideoModal.value = true
+}
+
+// Fechar modal de vídeo
+const handleCloseVideoModal = () => {
+  showVideoModal.value = false
+  selectedLesson.value = null
+}
+
+// Handler de conclusão de aula
+const handleLessonComplete = (lessonId: number) => {
+  console.log('Aula concluída:', lessonId)
+  // TODO: Implementar persistência no Supabase (futuro)
+  // Atualmente apenas registra no console
 }
 </script>
 
@@ -236,6 +258,7 @@ const handlePlayLesson = (lesson: Lesson) => {
         @edit-lesson="handleEditLesson"
         @delete-lesson="handleDeleteLesson"
         @play-lesson="handlePlayLesson"
+        @lesson-complete="handleLessonComplete"
       />
     </div>
 
@@ -253,6 +276,13 @@ const handlePlayLesson = (lesson: Lesson) => {
       :is-open="showLessonForm"
       @close="showLessonForm = false"
       @submit="handleLessonFormSubmit"
+    />
+
+    <!-- Modal de Player de Vídeo -->
+    <VideoPlayerModal
+      :lesson="selectedLesson"
+      :show="showVideoModal"
+      @close="handleCloseVideoModal"
     />
   </div>
 </template>
