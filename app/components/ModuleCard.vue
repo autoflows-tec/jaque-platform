@@ -79,14 +79,14 @@ const handleLessonComplete = (lessonId: number) => {
   <div class="module-card bg-card rounded-lg shadow-lg border border-border overflow-hidden">
     <!-- Header do módulo -->
     <div
-      class="module-header p-6 cursor-pointer hover:bg-card/80 transition-colors"
+      class="module-header p-4 md:p-6 cursor-pointer hover:bg-card/80 transition-colors"
       @click="toggleExpand"
     >
-      <div class="flex items-start gap-4">
+      <div class="flex items-start gap-3 md:gap-4">
         <!-- Thumbnail -->
         <div
           v-if="module.thumbnail_url"
-          class="w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-muted"
+          class="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden shrink-0 bg-muted"
         >
           <img
             :src="module.thumbnail_url"
@@ -96,7 +96,7 @@ const handleLessonComplete = (lessonId: number) => {
         </div>
         <div
           v-else
-          class="w-24 h-24 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shrink-0 flex items-center justify-center"
+          class="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 shrink-0 flex items-center justify-center"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +104,7 @@ const handleLessonComplete = (lessonId: number) => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-10 h-10 text-primary"
+            class="w-8 h-8 md:w-10 md:h-10 text-primary"
           >
             <path
               stroke-linecap="round"
@@ -116,9 +116,9 @@ const handleLessonComplete = (lessonId: number) => {
 
         <!-- Info -->
         <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <h3 class="text-xl font-bold text-foreground mb-2">
+          <div class="flex items-start justify-between gap-2 md:gap-4">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg md:text-xl font-bold text-foreground mb-1 md:mb-2">
                 {{ module.title }}
                 <span
                   v-if="isAdmin && !module.is_published"
@@ -143,7 +143,7 @@ const handleLessonComplete = (lessonId: number) => {
                 viewBox="0 0 24 24"
                 stroke-width="2"
                 stroke="currentColor"
-                class="w-6 h-6 text-muted-foreground transition-transform"
+                class="w-5 h-5 md:w-6 md:h-6 text-muted-foreground transition-transform"
                 :class="{ 'rotate-180': isExpanded }"
               >
                 <path
@@ -156,8 +156,8 @@ const handleLessonComplete = (lessonId: number) => {
           </div>
 
           <!-- Footer com contador de aulas -->
-          <div class="mt-3 flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">
+          <div class="mt-2 md:mt-3 flex items-center justify-between flex-wrap gap-2">
+            <span class="text-xs md:text-sm text-muted-foreground">
               {{ lessonsToShow.length }} {{ lessonsToShow.length === 1 ? 'aula' : 'aulas' }}
             </span>
 
@@ -168,13 +168,13 @@ const handleLessonComplete = (lessonId: number) => {
               @click.stop
             >
               <button
-                class="text-sm text-primary hover:text-primary/80 transition-colors"
+                class="text-xs md:text-sm text-primary hover:text-primary/80 transition-colors"
                 @click="handleEditModule"
               >
                 Editar
               </button>
               <button
-                class="text-sm text-destructive hover:text-destructive/80 transition-colors"
+                class="text-xs md:text-sm text-destructive hover:text-destructive/80 transition-colors"
                 @click="handleDeleteModule"
               >
                 Excluir
@@ -200,9 +200,9 @@ const handleLessonComplete = (lessonId: number) => {
       <!-- Modo Lista: Lista simples de aulas (fallback para módulos sem vídeo) -->
       <div
         v-else
-        class="lessons-list bg-muted/20 p-6"
+        class="lessons-list bg-muted/20 p-4 md:p-6"
       >
-        <div class="space-y-3">
+        <div class="space-y-2 md:space-y-3">
           <!-- Botão adicionar aula (visível apenas para admin) -->
           <div v-if="isAdmin" class="mb-4">
             <BaseButton

@@ -50,7 +50,7 @@ const handleFavoriteClick = (event: Event) => {
     @click="emit('click')"
   >
     <!-- Imagem -->
-    <div class="relative h-48 bg-muted overflow-hidden">
+    <div class="relative h-40 sm:h-48 bg-muted overflow-hidden">
       <img
         v-if="recipe.image_url"
         :src="recipe.image_url"
@@ -101,9 +101,9 @@ const handleFavoriteClick = (event: Event) => {
     </div>
 
     <!-- Conteúdo -->
-    <div class="p-4">
+    <div class="p-3 md:p-4">
       <!-- Título -->
-      <h3 class="text-lg font-semibold text-foreground mb-2 line-clamp-2">
+      <h3 class="text-base md:text-lg font-semibold text-foreground mb-2 line-clamp-2">
         {{ recipe.title }}
       </h3>
 

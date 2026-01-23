@@ -117,10 +117,10 @@ const handleCloseAdminForm = () => {
 <template>
   <div id="receitas-page" class="receitas-page">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-foreground mb-2">Receitas Saudáveis</h1>
-        <p class="text-muted-foreground">
+        <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-2">Receitas Saudáveis</h1>
+        <p class="text-sm md:text-base text-muted-foreground">
           Descubra receitas deliciosas e nutritivas para sua jornada
         </p>
       </div>
@@ -128,11 +128,12 @@ const handleCloseAdminForm = () => {
       <!-- Botão admin para criar receita -->
       <button
         v-if="isAdmin"
-        class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+        class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
         @click="handleCreateRecipe"
       >
         <PlusIcon class="w-5 h-5" />
-        <span>Nova Receita</span>
+        <span class="hidden sm:inline">Nova Receita</span>
+        <span class="sm:hidden">Nova</span>
       </button>
     </div>
 
@@ -202,7 +203,7 @@ const handleCloseAdminForm = () => {
     <!-- Grid de receitas -->
     <div
       v-else
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8"
     >
       <div
         v-for="recipe in recipesStore.recipes"

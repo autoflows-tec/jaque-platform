@@ -51,9 +51,9 @@ const isOwnPost = (post: any) => {
 <template>
   <div class="comunidade-page">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-foreground mb-2">Comunidade</h1>
-      <p class="text-muted-foreground">
+    <div class="mb-6 md:mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-2">Comunidade</h1>
+      <p class="text-sm md:text-base text-muted-foreground">
         Compartilhe sua jornada e conecte-se com outras alunas
       </p>
     </div>
@@ -64,10 +64,10 @@ const isOwnPost = (post: any) => {
     <!-- Loading state -->
     <div
       v-if="communityStore.loading && communityStore.posts.length === 0"
-      class="text-center py-12"
+      class="text-center py-8 md:py-12"
     >
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-      <p class="text-muted-foreground mt-4">Carregando publicações...</p>
+      <div class="inline-block animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-4 border-primary border-t-transparent"></div>
+      <p class="text-sm md:text-base text-muted-foreground mt-4">Carregando publicações...</p>
     </div>
 
     <!-- Error state -->
@@ -121,7 +121,7 @@ const isOwnPost = (post: any) => {
     <!-- Feed de posts -->
     <div
       v-else
-      class="space-y-6"
+      class="space-y-4 md:space-y-6"
     >
       <CommunityPostCard
         v-for="post in communityStore.posts"

@@ -147,11 +147,11 @@ const handleLessonComplete = (lessonId: number) => {
 <template>
   <div class="aulas-page">
     <!-- Header -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-4">
+    <div class="mb-6 md:mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div>
-          <h1 class="text-3xl font-bold text-foreground mb-2">Aulas</h1>
-          <p class="text-muted-foreground">
+          <h1 class="text-2xl md:text-3xl font-bold text-foreground mb-2">Aulas</h1>
+          <p class="text-sm md:text-base text-muted-foreground">
             Assista às aulas organizadas por módulos
           </p>
         </div>
@@ -160,6 +160,7 @@ const handleLessonComplete = (lessonId: number) => {
         <BaseButton
           v-if="isAdmin"
           variant="accent"
+          class="w-full sm:w-auto"
           @click="handleAddModule"
         >
           <svg
@@ -176,7 +177,8 @@ const handleLessonComplete = (lessonId: number) => {
               d="M12 4.5v15m7.5-7.5h-15"
             />
           </svg>
-          Adicionar Módulo
+          <span class="hidden sm:inline">Adicionar Módulo</span>
+          <span class="sm:hidden">Novo Módulo</span>
         </BaseButton>
       </div>
     </div>

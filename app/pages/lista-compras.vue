@@ -123,12 +123,12 @@ const handleUnfavoriteFromModal = async () => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 md:space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-foreground">Lista de Compras</h1>
-        <p class="text-muted-foreground mt-1">
+        <h1 class="text-2xl md:text-3xl font-bold text-foreground">Lista de Compras</h1>
+        <p class="text-sm md:text-base text-muted-foreground mt-1">
           Listas de compras organizadas para facilitar suas idas ao mercado
         </p>
       </div>
@@ -136,11 +136,12 @@ const handleUnfavoriteFromModal = async () => {
       <!-- Botão Admin: Nova Lista -->
       <button
         v-if="isAdmin"
-        class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+        class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
         @click="handleCreateList"
       >
         <PlusIcon class="w-5 h-5" />
-        Nova Lista
+        <span class="hidden sm:inline">Nova Lista</span>
+        <span class="sm:hidden">Nova</span>
       </button>
     </div>
 
@@ -176,7 +177,7 @@ const handleUnfavoriteFromModal = async () => {
     <!-- Grid de Listas -->
     <div
       v-else
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
     >
       <div
         v-for="list in shoppingListsStore.shoppingLists"
