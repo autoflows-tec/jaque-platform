@@ -193,8 +193,11 @@ const handleLessonComplete = (lessonId: number) => {
         :module="module"
         :lessons="lessonsToShow"
         :initial-lesson-index="firstLessonWithVideoIndex >= 0 ? firstLessonWithVideoIndex : 0"
+        :is-admin="isAdmin"
         @close="isExpanded = false"
         @lesson-complete="handleLessonComplete"
+        @edit-lesson="emit('editLesson', $event)"
+        @delete-lesson="emit('deleteLesson', $event, module.id)"
       />
 
       <!-- Modo Lista: Lista simples de aulas (fallback para módulos sem vídeo) -->

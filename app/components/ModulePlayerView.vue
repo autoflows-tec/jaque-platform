@@ -8,15 +8,19 @@ interface Props {
   module: Module
   lessons: Lesson[]
   initialLessonIndex?: number
+  isAdmin?: boolean
 }
 
 interface Emits {
   (e: 'close'): void
   (e: 'lessonComplete', lessonId: number): void
+  (e: 'editLesson', lesson: Lesson): void
+  (e: 'deleteLesson', lessonId: number, moduleId: number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  initialLessonIndex: 0
+  initialLessonIndex: 0,
+  isAdmin: false
 })
 
 const emit = defineEmits<Emits>()
@@ -87,6 +91,17 @@ const formatTotalDuration = (minutes: number): string => {
   }
   return `${mins}min`
 }
+
+// Handlers admin
+const handleEditLesson = () => {
+  emit('editLesson', currentLesson.value)
+}
+
+const handleDeleteLesson = () => {
+  if (confirm(`Tem certeza que deseja excluir a aula "${currentLesson.value.title}"?`)) {
+    emit('deleteLesson', currentLesson.value.id, currentLesson.value.module_id)
+  }
+}
 </script>
 
 <template>
@@ -141,9 +156,37 @@ const formatTotalDuration = (minutes: number): string => {
           <!-- Título e Navegação -->
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1">
-              <h2 class="text-2xl font-bold text-foreground mb-2">
-                {{ currentLesson.title }}
-              </h2>
+              <div class="flex items-start justify-between gap-3 mb-2">
+                <h2 class="text-xl md:text-2xl font-bold text-foreground">
+                  {{ currentLesson.title }}
+                  <span
+                    v-if="isAdmin && !currentLesson.is_published"
+                    class="ml-2 text-xs px-2 py-1 rounded bg-muted text-muted-foreground"
+                  >
+                    Rascunho
+                  </span>
+                </h2>
+
+                <!-- Botões admin -->
+                <div
+                  v-if="isAdmin"
+                  class="flex items-center gap-2 shrink-0"
+                >
+                  <button
+                    class="text-sm text-primary hover:text-primary/80 transition-colors px-3 py-1 rounded hover:bg-primary/10"
+                    @click="handleEditLesson"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    class="text-sm text-destructive hover:text-destructive/80 transition-colors px-3 py-1 rounded hover:bg-destructive/10"
+                    @click="handleDeleteLesson"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </div>
+
               <p v-if="currentLesson.description" class="text-muted-foreground text-sm">
                 {{ currentLesson.description }}
               </p>
