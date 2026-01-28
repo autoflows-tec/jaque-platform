@@ -16,6 +16,7 @@ interface Emits {
   (e: 'lessonComplete', lessonId: number): void
   (e: 'editLesson', lesson: Lesson): void
   (e: 'deleteLesson', lessonId: number, moduleId: number): void
+  (e: 'addLesson', moduleId: number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -101,6 +102,10 @@ const handleDeleteLesson = () => {
   if (confirm(`Tem certeza que deseja excluir a aula "${currentLesson.value.title}"?`)) {
     emit('deleteLesson', currentLesson.value.id, currentLesson.value.module_id)
   }
+}
+
+const handleAddLesson = () => {
+  emit('addLesson', props.module.id)
 }
 </script>
 
@@ -329,6 +334,30 @@ const handleDeleteLesson = () => {
               ></div>
             </div>
           </div>
+        </div>
+
+        <!-- Botão adicionar aula (visível apenas para admin) -->
+        <div v-if="isAdmin" class="mb-4">
+          <button
+            class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-sm font-medium"
+            @click="handleAddLesson"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              class="w-5 h-5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Adicionar Aula
+          </button>
         </div>
 
         <!-- Lista de Aulas -->

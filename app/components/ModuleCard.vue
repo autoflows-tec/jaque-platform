@@ -198,6 +198,7 @@ const handleLessonComplete = (lessonId: number) => {
         @lesson-complete="handleLessonComplete"
         @edit-lesson="emit('editLesson', $event)"
         @delete-lesson="emit('deleteLesson', $event, module.id)"
+        @add-lesson="handleAddLesson"
       />
 
       <!-- Modo Lista: Lista simples de aulas (fallback para módulos sem vídeo) -->
