@@ -17,6 +17,14 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
+const user = useSupabaseUser()
+
+// Verificar se a receita é pessoal do usuário
+const isUserRecipe = computed(() => {
+  const userId = user.value?.id || user.value?.sub
+  return userId && props.recipe.created_by === userId && !props.recipe.is_published
+})
+
 // Calcular tempo total
 const totalTime = computed(() => {
   const prep = props.recipe.prep_time_minutes || 0
@@ -92,10 +100,19 @@ const handleFavoriteClick = (event: Event) => {
         />
       </button>
 
-      <!-- Badge de categoria -->
-      <div class="absolute bottom-3 left-3">
+      <!-- Badges -->
+      <div class="absolute bottom-3 left-3 flex gap-2">
+        <!-- Badge de categoria -->
         <span class="px-3 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium rounded-full">
           {{ RecipeCategoryLabels[recipe.category] }}
+        </span>
+
+        <!-- Badge de receita pessoal -->
+        <span
+          v-if="isUserRecipe"
+          class="px-3 py-1 bg-green-500/90 backdrop-blur-sm text-white text-xs font-medium rounded-full"
+        >
+          Minha Receita
         </span>
       </div>
     </div>

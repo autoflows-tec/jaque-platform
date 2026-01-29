@@ -39,11 +39,10 @@ export const useRecipesStore = defineStore('recipes', () => {
         activeFilters.value = { ...activeFilters.value, ...filters }
       }
 
-      // Query base
+      // Query base - Busca receitas publicadas OU receitas do próprio usuário
       let query = supabase
         .from('recipes')
         .select('*')
-        .eq('is_published', true)
         .order('created_at', { ascending: false })
 
       // Aplicar filtros
@@ -244,7 +243,7 @@ export const useRecipesStore = defineStore('recipes', () => {
     }
   }
 
-  // Criar receita (apenas admin)
+  // Criar receita (usuários autenticados)
   const createRecipe = async (input: RecipeCreateInput) => {
     if (!user.value?.id && !user.value?.sub) {
       error.value = 'Usuário não autenticado'
@@ -256,7 +255,9 @@ export const useRecipesStore = defineStore('recipes', () => {
 
       const recipeInput = {
         ...input,
-        created_by: userId
+        created_by: userId,
+        // Receitas de usuários comuns são não-publicadas por padrão (pessoais)
+        is_published: input.is_published ?? false
       }
 
       const { data, error: insertError } = await supabase
@@ -267,10 +268,8 @@ export const useRecipesStore = defineStore('recipes', () => {
 
       if (insertError) throw insertError
 
-      // Adicionar ao início da lista se publicada
-      if (data.is_published) {
-        recipes.value = [{ ...data, user_has_favorited: false }, ...recipes.value]
-      }
+      // Sempre adicionar ao início da lista (usuário verá suas próprias receitas)
+      recipes.value = [{ ...data, user_has_favorited: false }, ...recipes.value]
 
       return { success: true, data }
     } catch (err: any) {
