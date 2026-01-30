@@ -57,8 +57,8 @@ definePageMeta({
           </NuxtLink>
         </div>
 
-        <!-- Card: 21 Dias -->
-        <div class="bg-card border border-border rounded-lg p-4 md:p-6 hover:shadow-lg transition-shadow">
+        <!-- Card: 21 Dias (OCULTO) -->
+        <!-- <div class="bg-card border border-border rounded-lg p-4 md:p-6 hover:shadow-lg transition-shadow">
           <div class="flex items-center gap-3 mb-3">
             <div class="p-2 bg-primary/10 rounded-lg">
               <CalendarDaysIcon class="w-6 h-6 text-primary" />
@@ -70,7 +70,7 @@ definePageMeta({
             Ver Desafio
             <ArrowRightIcon class="w-4 h-4" />
           </NuxtLink>
-        </div>
+        </div> -->
 
         <!-- Card: Comunidade -->
         <div class="bg-card border border-border rounded-lg p-4 md:p-6 hover:shadow-lg transition-shadow">

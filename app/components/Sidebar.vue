@@ -35,7 +35,7 @@ const menuItems: MenuItem[] = [
   { name: 'Receitas', path: '/receitas', icon: ClipboardDocumentListIcon },
   { name: 'Lista de Compras', path: '/lista-compras', icon: ShoppingCartIcon },
   { name: 'Marcas', path: '/marcas', icon: StarIcon },
-  { name: 'Chat IA', path: '/chat-receitas', icon: SparklesIcon },
+  { name: 'IA Ancestral', path: '/chat-receitas', icon: SparklesIcon },
   { name: 'Suporte', path: '/suporte', icon: ChatBubbleLeftRightIcon },
   { name: 'Perfil', path: '/perfil', icon: UserCircleIcon }
 ]
