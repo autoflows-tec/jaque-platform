@@ -55,71 +55,68 @@ watch(message, () => {
   adjustHeight()
 })
 
-// Focus no input quando montar
+// Focus no input quando montar (apenas desktop)
 onMounted(() => {
-  textareaRef.value?.focus()
+  if (window.innerWidth >= 1024) {
+    textareaRef.value?.focus()
+  }
 })
 </script>
 
 <template>
-  <div id="chat-input" class="chat-input bg-card border-t border-border p-4">
-    <div class="max-w-4xl mx-auto flex items-end gap-3">
-      <!-- Textarea -->
-      <div class="flex-1 relative">
-        <textarea
-          ref="textareaRef"
-          v-model="message"
-          :placeholder="placeholder"
-          :disabled="disabled"
-          class="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          :class="disabled ? 'opacity-50' : ''"
-          rows="1"
-          style="max-height: 150px; min-height: 48px; font-size: 16px;"
-          @keydown="handleKeydown"
-        />
-
-        <!-- Hint de teclas -->
-        <div class="absolute bottom-1 right-3 text-xs text-muted-foreground pointer-events-none">
-          <span v-if="!disabled && message.trim()">Enter para enviar</span>
+  <div id="chat-input" class="chat-input bg-card border-t border-border p-3 md:p-4">
+    <div class="max-w-3xl mx-auto">
+      <!-- Input principal -->
+      <div class="flex items-end gap-2 md:gap-3">
+        <!-- Textarea -->
+        <div class="flex-1 relative">
+          <textarea
+            ref="textareaRef"
+            v-model="message"
+            :placeholder="placeholder"
+            :disabled="disabled"
+            class="w-full resize-none rounded-lg border border-border bg-background px-3 md:px-4 py-2.5 md:py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            :class="disabled ? 'opacity-50' : ''"
+            rows="1"
+            style="max-height: 120px; min-height: 44px; font-size: 16px;"
+            @keydown="handleKeydown"
+          />
         </div>
+
+        <!-- Botão Enviar -->
+        <button
+          :disabled="disabled || !message.trim()"
+          class="shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+          @click="handleSend"
+        >
+          <PaperAirplaneIcon class="w-5 h-5" />
+        </button>
       </div>
 
-      <!-- Botão Enviar -->
-      <button
-        :disabled="disabled || !message.trim()"
-        class="shrink-0 w-12 h-12 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        @click="handleSend"
-      >
-        <PaperAirplaneIcon
-          class="w-5 h-5 transform -rotate-45"
-          :class="disabled ? '' : 'group-hover:scale-110'"
-        />
-      </button>
-    </div>
-
-    <!-- Sugestões rápidas (opcional) -->
-    <div class="max-w-4xl mx-auto mt-3 flex flex-wrap gap-2">
-      <button
-        v-if="!message && !disabled"
-        class="px-3 py-1 text-xs bg-muted hover:bg-muted/80 text-muted-foreground rounded-full transition-colors"
-        @click="message = 'Tenho frango, batata e brócolis'"
-      >
-        💡 Frango e vegetais
-      </button>
-      <button
-        v-if="!message && !disabled"
-        class="px-3 py-1 text-xs bg-muted hover:bg-muted/80 text-muted-foreground rounded-full transition-colors"
-        @click="message = 'Tenho 30 minutos para cozinhar'"
-      >
-        ⏱️ Receita rápida
-      </button>
-      <button
-        v-if="!message && !disabled"
-        class="px-3 py-1 text-xs bg-muted hover:bg-muted/80 text-muted-foreground rounded-full transition-colors"
-        @click="message = 'Quero uma receita vegana'"
-      >
-        🌱 Receita vegana
-      </button>
+      <!-- Sugestões rápidas -->
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button
+          v-if="!message && !disabled"
+          class="px-3 py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-foreground rounded-full transition-colors"
+          @click="message = 'Tenho frango, batata e brócolis'"
+        >
+          💡 Frango e vegetais
+        </button>
+        <button
+          v-if="!message && !disabled"
+          class="px-3 py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-foreground rounded-full transition-colors"
+          @click="message = 'Tenho 30 minutos para cozinhar'"
+        >
+          ⏱️ Receita rápida
+        </button>
+        <button
+          v-if="!message && !disabled"
+          class="px-3 py-1.5 text-xs md:text-sm bg-muted hover:bg-muted/80 text-foreground rounded-full transition-colors"
+          @click="message = 'Quero uma receita vegana'"
+        >
+          🌱 Receita vegana
+        </button>
+      </div>
     </div>
   </div>
 </template>

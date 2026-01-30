@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ChatBubbleLeftRightIcon, Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ChatBubbleLeftRightIcon, Bars3Icon, XMarkIcon, ArrowLeftIcon } from '@heroicons/vue/24/outline'
 import ChatConversationList from '~/components/ChatConversationList.vue'
 import ChatMessageBubble from '~/components/ChatMessageBubble.vue'
 import ChatInput from '~/components/ChatInput.vue'
 import { useChatStore } from '~/stores/useChatStore'
 import type { ChatConversation } from '../../shared/types/Chat'
 
+const router = useRouter()
+
 definePageMeta({
-  layout: 'main-layout',
+  layout: false,
   pageTransition: false
 })
 
@@ -64,12 +66,20 @@ const toggleMobileMenu = () => {
 </script>
 
 <template>
-  <div id="chat-receitas-page" class="min-h-0 flex-1 flex flex-col bg-background">
+  <div id="chat-receitas-page" class="fixed inset-0 flex flex-col bg-background">
     <!-- Header Mobile -->
-    <div class="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-      <div class="flex items-center gap-2">
-        <ChatBubbleLeftRightIcon class="w-6 h-6 text-primary" />
-        <h1 class="text-lg font-bold">Chat IA - Receitas</h1>
+    <div class="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card shrink-0">
+      <div class="flex items-center gap-3">
+        <button
+          class="p-1 hover:bg-muted rounded-lg transition-colors"
+          @click="router.push('/')"
+        >
+          <ArrowLeftIcon class="w-5 h-5" />
+        </button>
+        <div class="flex items-center gap-2">
+          <ChatBubbleLeftRightIcon class="w-6 h-6 text-primary" />
+          <h1 class="text-lg font-bold">IA Ancestral</h1>
+        </div>
       </div>
       <button
         class="p-2 hover:bg-muted rounded-lg transition-colors"
@@ -81,7 +91,7 @@ const toggleMobileMenu = () => {
     </div>
 
     <!-- Layout Principal -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden min-h-0">
       <!-- Sidebar de Conversas - Desktop -->
       <div class="hidden lg:block w-80 border-r border-border">
         <ChatConversationList
@@ -119,13 +129,19 @@ const toggleMobileMenu = () => {
       </Transition>
 
       <!-- Área do Chat -->
-      <div class="flex-1 flex flex-col bg-background overflow-hidden">
+      <div class="flex-1 flex flex-col bg-background overflow-hidden min-h-0">
         <!-- Header Desktop -->
-        <div class="hidden lg:flex items-center gap-3 p-4 border-b border-border bg-card">
+        <div class="hidden lg:flex items-center gap-3 p-4 border-b border-border bg-card shrink-0">
+          <button
+            class="p-1.5 hover:bg-muted rounded-lg transition-colors"
+            @click="router.push('/')"
+          >
+            <ArrowLeftIcon class="w-5 h-5" />
+          </button>
           <ChatBubbleLeftRightIcon class="w-6 h-6 text-primary" />
           <div class="flex-1">
             <h1 class="text-lg font-bold">
-              {{ chatStore.currentConversation?.title || 'Chat IA - Receitas' }}
+              {{ chatStore.currentConversation?.title || 'IA Ancestral' }}
             </h1>
             <p class="text-xs text-muted-foreground">
               Informe seus ingredientes e receba sugestões de receitas
@@ -136,7 +152,7 @@ const toggleMobileMenu = () => {
         <!-- Área de Mensagens -->
         <div
           ref="messagesContainerRef"
-          class="flex-1 overflow-y-auto p-4 md:p-6"
+          class="flex-1 overflow-y-auto p-4 md:p-6 min-h-0"
         >
           <!-- Empty State - Nenhuma conversa selecionada -->
           <div
@@ -189,12 +205,14 @@ const toggleMobileMenu = () => {
         </div>
 
         <!-- Input de Mensagem -->
-        <ChatInput
-          v-if="chatStore.currentConversation"
-          :disabled="chatStore.sendingMessage"
-          :placeholder="chatStore.sendingMessage ? 'Aguarde a resposta...' : 'Digite os ingredientes que você tem...'"
-          @send="handleSendMessage"
-        />
+        <div class="shrink-0">
+          <ChatInput
+            v-if="chatStore.currentConversation"
+            :disabled="chatStore.sendingMessage"
+            :placeholder="chatStore.sendingMessage ? 'Aguarde a resposta...' : 'Digite os ingredientes que você tem...'"
+            @send="handleSendMessage"
+          />
+        </div>
       </div>
     </div>
   </div>
