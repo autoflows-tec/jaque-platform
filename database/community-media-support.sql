@@ -7,12 +7,23 @@ ALTER TABLE public.community_posts
 ADD COLUMN IF NOT EXISTS media_urls text[];
 
 -- 2. Criar bucket para mídia da comunidade no Supabase Storage
--- IMPORTANTE: Execute este comando via Dashboard do Supabase > Storage > New Bucket
--- Nome do bucket: "community-media"
--- Configurações:
---   - Public: false (acesso controlado por RLS)
---   - Allowed MIME types: image/*, video/*
---   - Max file size: 50MB
+-- Opção 1: Tentar criar via SQL
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'community-media',
+  'community-media',
+  false,
+  52428800, -- 50MB em bytes
+  ARRAY['image/*', 'video/*']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Opção 2: Se SQL acima não funcionar, crie manualmente:
+-- Dashboard > Storage > New Bucket
+-- Nome: "community-media"
+-- Public: false
+-- Max file size: 50MB
+-- Allowed MIME types: image/*, video/*
 
 -- 3. Políticas de acesso ao bucket "community-media"
 
