@@ -111,9 +111,41 @@ const toggleComments = () => {
     </div>
 
     <!-- Conteúdo -->
-    <p class="text-foreground whitespace-pre-wrap mb-4">
+    <p v-if="post.content" class="text-foreground whitespace-pre-wrap mb-4">
       {{ post.content }}
     </p>
+
+    <!-- Media Gallery -->
+    <div
+      v-if="post.media_urls && post.media_urls.length > 0"
+      class="mb-4 grid gap-2"
+      :class="{
+        'grid-cols-1': post.media_urls.length === 1,
+        'grid-cols-2': post.media_urls.length > 1
+      }"
+    >
+      <div
+        v-for="(url, index) in post.media_urls"
+        :key="index"
+        class="relative aspect-video rounded-lg overflow-hidden bg-muted"
+      >
+        <!-- Detectar se é vídeo pela extensão -->
+        <video
+          v-if="url.match(/\.(mp4|webm|ogg|mov)$/i)"
+          :src="url"
+          class="w-full h-full object-cover"
+          controls
+          preload="metadata"
+        />
+        <img
+          v-else
+          :src="url"
+          alt="Mídia do post"
+          class="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+          loading="lazy"
+        >
+      </div>
+    </div>
 
     <!-- Actions -->
     <div class="flex items-center gap-6 pt-4 border-t border-border">

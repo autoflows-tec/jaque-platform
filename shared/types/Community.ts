@@ -3,6 +3,18 @@
 // =====================================================
 
 // =====================================================
+// TYPES: Tipos de mídia suportados
+// =====================================================
+
+export type MediaType = 'image' | 'video'
+
+export interface PostMedia {
+  url: string
+  type: MediaType
+  thumbnail?: string // Para vídeos, thumbnail opcional
+}
+
+// =====================================================
 // INTERFACE: Post da Comunidade
 // =====================================================
 
@@ -12,6 +24,7 @@ export interface CommunityPost {
   updated_at: string
   user_id: string
   content: string
+  media_urls?: string[] | null // URLs de imagens/vídeos
   is_published: boolean
   likes_count: number
   comments_count: number
@@ -71,11 +84,13 @@ export interface CommunityPostCommentWithAuthor extends CommunityPostComment {
 export interface CommunityPostCreateInput {
   user_id: string
   content: string
+  media_urls?: string[] | null
   is_published?: boolean
 }
 
 export interface CommunityPostUpdateInput {
   content?: string
+  media_urls?: string[] | null
   is_published?: boolean
 }
 

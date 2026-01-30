@@ -78,8 +78,39 @@ export const useCommunityStore = defineStore('community', () => {
     }
   }
 
-  // Criar novo post
-  const createPost = async (content: string) => {
+  // Fazer upload de mídia para o Supabase Storage
+  const uploadMedia = async (file: File, userId: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${userId}/${fileName}`
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('community-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload:', uploadError)
+        return null
+      }
+
+      // Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('community-media')
+        .getPublicUrl(data.path)
+
+      return publicUrl
+    } catch (err) {
+      console.error('Erro no upload de mídia:', err)
+      return null
+    }
+  }
+
+  // Criar novo post com mídia
+  const createPost = async (content: string, mediaFiles: File[] = []) => {
     if (!user.value?.id && !user.value?.sub) {
       error.value = 'Usuário não autenticado'
       return { success: false }
@@ -91,9 +122,22 @@ export const useCommunityStore = defineStore('community', () => {
     error.value = null
 
     try {
+      // Fazer upload das mídias se existirem
+      let mediaUrls: string[] = []
+      if (mediaFiles.length > 0) {
+        const uploadPromises = mediaFiles.map(file => uploadMedia(file, userId))
+        const results = await Promise.all(uploadPromises)
+        mediaUrls = results.filter((url): url is string => url !== null)
+
+        if (mediaUrls.length !== mediaFiles.length) {
+          error.value = 'Erro ao fazer upload de algumas mídias'
+        }
+      }
+
       const input: CommunityPostCreateInput = {
         user_id: userId,
         content,
+        media_urls: mediaUrls.length > 0 ? mediaUrls : null,
         is_published: true
       }
 

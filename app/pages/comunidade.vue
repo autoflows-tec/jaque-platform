@@ -16,8 +16,8 @@ onMounted(async () => {
 })
 
 // Criar novo post
-const handleCreatePost = async (content: string) => {
-  const result = await communityStore.createPost(content)
+const handleCreatePost = async (content: string, mediaFiles: File[]) => {
+  const result = await communityStore.createPost(content, mediaFiles)
   if (!result.success) {
     alert('Erro ao criar publicação. Tente novamente.')
   }
