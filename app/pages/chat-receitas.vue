@@ -7,7 +7,8 @@ import { useChatStore } from '~/stores/useChatStore'
 import type { ChatConversation } from '../../shared/types/Chat'
 
 definePageMeta({
-  layout: 'main-layout'
+  layout: 'main-layout',
+  pageTransition: false
 })
 
 const chatStore = useChatStore()
@@ -42,7 +43,7 @@ const handleSelectConversation = async (conversation: ChatConversation) => {
 
 const handleCreateConversation = async () => {
   const result = await chatStore.createConversation()
-  if (result.success && result.data) {
+  if (result && result.success && result.data) {
     await chatStore.selectConversation(result.data)
     showMobileMenu.value = false
   }
@@ -63,7 +64,7 @@ const toggleMobileMenu = () => {
 </script>
 
 <template>
-  <div id="chat-receitas-page" class="h-[calc(100vh-4rem)] flex flex-col bg-background">
+  <div id="chat-receitas-page" class="min-h-0 flex-1 flex flex-col bg-background">
     <!-- Header Mobile -->
     <div class="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
       <div class="flex items-center gap-2">

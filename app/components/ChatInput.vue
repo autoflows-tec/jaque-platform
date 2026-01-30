@@ -74,7 +74,7 @@ onMounted(() => {
           class="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           :class="disabled ? 'opacity-50' : ''"
           rows="1"
-          style="max-height: 150px; min-height: 48px;"
+          style="max-height: 150px; min-height: 48px; font-size: 16px;"
           @keydown="handleKeydown"
         />
 
