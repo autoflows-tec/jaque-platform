@@ -141,6 +141,7 @@ export interface RecipeUpdateInput {
 // =====================================================
 
 export interface RecipeFilters {
+  search_query?: string | null // Busca por nome
   category?: RecipeCategory | null
   difficulty?: RecipeDifficulty | null
   tags?: string[] | null

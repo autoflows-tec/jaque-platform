@@ -21,6 +21,7 @@ export const useRecipesStore = defineStore('recipes', () => {
 
   // Filtros ativos
   const activeFilters = ref<RecipeFilters>({
+    search_query: null,
     category: null,
     difficulty: null,
     tags: null,
@@ -364,6 +365,11 @@ export const useRecipesStore = defineStore('recipes', () => {
         .eq('is_published', true)
         .order('created_at', { ascending: false })
 
+      // Aplicar filtro de busca por nome
+      if (activeFilters.value.search_query) {
+        query = query.ilike('title', `%${activeFilters.value.search_query}%`)
+      }
+
       // Aplicar filtros
       if (activeFilters.value.category) {
         query = query.eq('category', activeFilters.value.category)
@@ -460,6 +466,11 @@ export const useRecipesStore = defineStore('recipes', () => {
         .eq('is_published', false)
         .order('created_at', { ascending: false })
 
+      // Aplicar filtro de busca por nome
+      if (activeFilters.value.search_query) {
+        query = query.ilike('title', `%${activeFilters.value.search_query}%`)
+      }
+
       // Aplicar filtros
       if (activeFilters.value.category) {
         query = query.eq('category', activeFilters.value.category)
@@ -530,6 +541,7 @@ export const useRecipesStore = defineStore('recipes', () => {
   // Limpar filtros
   const clearFilters = () => {
     activeFilters.value = {
+      search_query: null,
       category: null,
       difficulty: null,
       tags: null,

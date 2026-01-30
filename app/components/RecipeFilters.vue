@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FunnelIcon, XMarkIcon, HeartIcon } from '@heroicons/vue/24/outline'
+import { FunnelIcon, XMarkIcon, HeartIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
 import {
   RecipeCategory,
   RecipeDifficulty,
@@ -16,11 +16,26 @@ interface Emits {
 const emit = defineEmits<Emits>()
 
 // Estado dos filtros
+const searchQuery = ref('')
 const selectedCategory = ref<RecipeCategory | null>(null)
 const selectedDifficulty = ref<RecipeDifficulty | null>(null)
 const maxPrepTime = ref<number | null>(null)
 const favoritesOnly = ref(false)
 const showFilters = ref(false)
+
+// Debounce para busca
+let searchTimeout: NodeJS.Timeout | null = null
+
+// Watch na busca com debounce
+watch(searchQuery, (newValue) => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  searchTimeout = setTimeout(() => {
+    applyFilters()
+  }, 500) // 500ms de delay
+})
 
 // Opções de categorias
 const categoryOptions = [
@@ -48,7 +63,8 @@ const timeOptions = [
 
 // Verificar se há filtros ativos
 const hasActiveFilters = computed(() => {
-  return selectedCategory.value !== null ||
+  return searchQuery.value.trim() !== '' ||
+    selectedCategory.value !== null ||
     selectedDifficulty.value !== null ||
     maxPrepTime.value !== null ||
     favoritesOnly.value
@@ -57,6 +73,7 @@ const hasActiveFilters = computed(() => {
 // Aplicar filtros
 const applyFilters = () => {
   const filters: RecipeFilters = {
+    search_query: searchQuery.value.trim() || null,
     category: selectedCategory.value,
     difficulty: selectedDifficulty.value,
     max_prep_time: maxPrepTime.value,
@@ -64,11 +81,11 @@ const applyFilters = () => {
   }
 
   emit('apply', filters)
-  showFilters.value = false
 }
 
 // Limpar filtros
 const clearFilters = () => {
+  searchQuery.value = ''
   selectedCategory.value = null
   selectedDifficulty.value = null
   maxPrepTime.value = null
@@ -87,18 +104,29 @@ const toggleFavorites = () => {
 
 <template>
   <div id="recipe-filters" class="recipe-filters">
-    <!-- Barra de filtros -->
+    <!-- Barra de busca e filtros -->
     <div class="flex items-center gap-3 flex-wrap">
+      <!-- Campo de busca -->
+      <div class="flex-1 min-w-[200px] max-w-md relative">
+        <MagnifyingGlassIcon class="w-5 h-5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Buscar receitas por nome..."
+          class="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+        />
+      </div>
+
       <!-- Botão de filtros -->
       <button
         class="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg hover:bg-muted transition-colors"
-        :class="{ 'bg-primary text-primary-foreground border-primary hover:bg-primary/90': hasActiveFilters }"
+        :class="{ 'bg-primary text-primary-foreground border-primary hover:bg-primary/90': hasActiveFilters && !searchQuery }"
         @click="showFilters = !showFilters"
       >
         <FunnelIcon class="w-4 h-4" />
         <span class="text-sm font-medium">Filtros</span>
         <span
-          v-if="hasActiveFilters"
+          v-if="[selectedCategory, selectedDifficulty, maxPrepTime, favoritesOnly].filter(Boolean).length > 0"
           class="ml-1 px-1.5 py-0.5 bg-primary-foreground text-primary text-xs rounded-full"
         >
           {{ [selectedCategory, selectedDifficulty, maxPrepTime, favoritesOnly].filter(Boolean).length }}
