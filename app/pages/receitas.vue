@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import RecipeCard from '~/components/RecipeCard.vue'
+import RecipeTabs from '~/components/RecipeTabs.vue'
 import RecipeFilters from '~/components/RecipeFilters.vue'
 import RecipeDetailModal from '~/components/RecipeDetailModal.vue'
 import AdminRecipeForm from '~/components/AdminRecipeForm.vue'
@@ -14,29 +15,76 @@ definePageMeta({
 
 const recipesStore = useRecipesStore()
 const userStore = useUserStore()
+const user = useSupabaseUser()
 
 const selectedRecipe = ref<RecipeWithFavorite | null>(null)
 const showDetailModal = ref(false)
 const showAdminForm = ref(false)
 const recipeToEdit = ref<RecipeWithFavorite | null>(null)
+const activeTab = ref<'jaque' | 'user'>('jaque')
 
 // Verificar se é admin
 const isAdmin = computed(() => userStore.profile?.role === 'admin')
 
+// ID do usuário
+const userId = computed(() => user.value?.id || user.value?.sub)
+
+// Tabs configuration
+const tabs = [
+  { id: 'jaque', label: 'Receitas da Jaque' },
+  { id: 'user', label: 'Minhas Receitas' }
+]
+
+// Contadores de receitas por aba
+const recipeCounts = computed(() => ({
+  jaque: recipesStore.jaqueRecipes.length,
+  user: recipesStore.userRecipes.length
+}))
+
+// Receitas da aba ativa
+const currentRecipes = computed(() => {
+  return activeTab.value === 'jaque'
+    ? recipesStore.jaqueRecipes
+    : recipesStore.userRecipes
+})
+
+// Mostrar botão de criar receita
+const showCreateButton = computed(() => {
+  // Na aba "Minhas Receitas" ou sempre para admin
+  return activeTab.value === 'user' || isAdmin.value
+})
+
 // Carregar receitas ao montar
 onMounted(async () => {
-  await recipesStore.fetchRecipes()
+  await Promise.all([
+    recipesStore.fetchJaqueRecipes(),
+    recipesStore.fetchUserRecipes()
+  ])
 })
+
+// Trocar aba
+const handleTabChange = async (tabId: string) => {
+  activeTab.value = tabId as 'jaque' | 'user'
+  recipesStore.clearFilters()
+}
 
 // Aplicar filtros
 const handleApplyFilters = async (filters: RecipeFiltersType) => {
-  await recipesStore.fetchRecipes(filters)
+  if (activeTab.value === 'jaque') {
+    await recipesStore.fetchJaqueRecipes(filters)
+  } else {
+    await recipesStore.fetchUserRecipes(filters)
+  }
 }
 
 // Limpar filtros
 const handleClearFilters = async () => {
   recipesStore.clearFilters()
-  await recipesStore.fetchRecipes()
+  if (activeTab.value === 'jaque') {
+    await recipesStore.fetchJaqueRecipes()
+  } else {
+    await recipesStore.fetchUserRecipes()
+  }
 }
 
 // Abrir detalhes da receita
@@ -79,6 +127,13 @@ const handleDeleteRecipe = async (recipeId: number) => {
   }
 }
 
+// Verificar se usuário pode editar receita
+const canEditRecipe = (recipe: RecipeWithFavorite) => {
+  if (isAdmin.value) return true
+  if (activeTab.value === 'user' && recipe.created_by === userId.value) return true
+  return false
+}
+
 // Submeter formulário admin
 const handleAdminFormSubmit = async (data: any) => {
   let result
@@ -95,7 +150,11 @@ const handleAdminFormSubmit = async (data: any) => {
     showAdminForm.value = false
     recipeToEdit.value = null
     alert(recipeToEdit.value ? 'Receita atualizada com sucesso!' : 'Receita criada com sucesso!')
-    await recipesStore.fetchRecipes()
+    // Recarregar ambas as abas
+    await Promise.all([
+      recipesStore.fetchJaqueRecipes(),
+      recipesStore.fetchUserRecipes()
+    ])
   } else {
     alert('Erro ao salvar receita.')
   }
@@ -125,8 +184,9 @@ const handleCloseAdminForm = () => {
         </p>
       </div>
 
-      <!-- Botão para criar receita (admin ou usuário) -->
+      <!-- Botão para criar receita (condicional) -->
       <button
+        v-if="showCreateButton"
         class="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
         @click="handleCreateRecipe"
       >
@@ -136,6 +196,14 @@ const handleCloseAdminForm = () => {
       </button>
     </div>
 
+    <!-- Tabs -->
+    <RecipeTabs
+      :tabs="tabs"
+      :active-tab="activeTab"
+      :counts="recipeCounts"
+      @change="handleTabChange"
+    />
+
     <!-- Filtros -->
     <RecipeFilters
       @apply="handleApplyFilters"
@@ -144,7 +212,7 @@ const handleCloseAdminForm = () => {
 
     <!-- Loading state -->
     <div
-      v-if="recipesStore.loading && recipesStore.recipes.length === 0"
+      v-if="recipesStore.loading && currentRecipes.length === 0"
       class="text-center py-12 mt-8"
     >
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
@@ -153,7 +221,7 @@ const handleCloseAdminForm = () => {
 
     <!-- Error state -->
     <div
-      v-else-if="recipesStore.error && recipesStore.recipes.length === 0"
+      v-else-if="recipesStore.error && currentRecipes.length === 0"
       class="text-center py-12 mt-8"
     >
       <svg
@@ -176,7 +244,7 @@ const handleCloseAdminForm = () => {
 
     <!-- Empty state -->
     <div
-      v-else-if="recipesStore.recipes.length === 0"
+      v-else-if="currentRecipes.length === 0"
       class="text-center py-12 mt-8 bg-card rounded-lg border border-border"
     >
       <svg
@@ -193,9 +261,11 @@ const handleCloseAdminForm = () => {
           d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0L3 16.5m15-3.379a48.474 48.474 0 0 0-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 0 1 3 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 0 1 6 13.12M12.265 3.11a.375.375 0 1 1-.53 0L12 2.845l.265.265Zm-3 0a.375.375 0 1 1-.53 0L9 2.845l.265.265Zm6 0a.375.375 0 1 1-.53 0L15 2.845l.265.265Z"
         />
       </svg>
-      <p class="text-muted-foreground font-medium">Nenhuma receita encontrada</p>
+      <p class="text-muted-foreground font-medium">
+        {{ activeTab === 'user' ? 'Você ainda não tem receitas' : 'Nenhuma receita encontrada' }}
+      </p>
       <p class="text-sm text-muted-foreground mt-2">
-        Tente ajustar os filtros ou volte mais tarde
+        {{ activeTab === 'user' ? 'Clique em "Minha Receita" para criar sua primeira receita' : 'Tente ajustar os filtros ou volte mais tarde' }}
       </p>
     </div>
 
@@ -205,13 +275,13 @@ const handleCloseAdminForm = () => {
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-6 md:mt-8"
     >
       <div
-        v-for="recipe in recipesStore.recipes"
+        v-for="recipe in currentRecipes"
         :key="recipe.id"
         class="relative"
       >
-        <!-- Botões admin (editar/deletar) -->
+        <!-- Botões editar/deletar (baseado em permissão) -->
         <div
-          v-if="isAdmin"
+          v-if="canEditRecipe(recipe)"
           class="absolute top-2 right-2 z-10 flex gap-2"
         >
           <button
