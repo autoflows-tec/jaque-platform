@@ -319,6 +319,21 @@ export const QUIZ_SCORES = {
 } as const
 
 // =====================================================
+// TYPES: Classificação de Inflamação
+// =====================================================
+
+export type InflammationLevel = 'baixa' | 'moderada' | 'alta'
+
+export interface InflammationResult {
+  level: InflammationLevel
+  title: string
+  description: string
+  recommendations: string[]
+  color: 'green' | 'yellow' | 'red'
+  icon: string
+}
+
+// =====================================================
 // HELPER: Calcular pontuação total
 // =====================================================
 
@@ -367,4 +382,71 @@ export function calculateQuizScore(responses: QuizResponses): number {
   }
 
   return total
+}
+
+// =====================================================
+// HELPER: Obter nível de inflamação baseado na pontuação
+// =====================================================
+
+export function getInflammationLevel(score: number): InflammationLevel {
+  if (score >= 0 && score <= 30) {
+    return 'baixa'
+  } else if (score >= 31 && score <= 60) {
+    return 'moderada'
+  } else {
+    return 'alta'
+  }
+}
+
+// =====================================================
+// HELPER: Obter mensagem e recomendações por nível
+// =====================================================
+
+export function getInflammationMessage(level: InflammationLevel): InflammationResult {
+  const messages: Record<InflammationLevel, InflammationResult> = {
+    baixa: {
+      level: 'baixa',
+      title: 'Inflamação Baixa',
+      description: 'Parabéns! Seus sintomas indicam baixos níveis de inflamação intestinal. Continue mantendo hábitos saudáveis para preservar seu bem-estar.',
+      recommendations: [
+        'Mantenha uma alimentação equilibrada e natural',
+        'Continue praticando atividades físicas regulares',
+        'Durma bem e gerencie o estresse no dia a dia',
+        'Hidrate-se adequadamente ao longo do dia'
+      ],
+      color: 'green',
+      icon: '🔹'
+    },
+    moderada: {
+      level: 'moderada',
+      title: 'Inflamação Moderada',
+      description: 'Você apresenta sinais moderados de inflamação intestinal. Algumas mudanças no estilo de vida podem ajudar a melhorar seus sintomas e prevenir o agravamento.',
+      recommendations: [
+        'Revise sua alimentação e evite ultraprocessados',
+        'Aumente o consumo de fibras e alimentos probióticos',
+        'Gerencie melhor o estresse com práticas de relaxamento',
+        'Considere consultar um nutricionista especializado',
+        'Priorize um sono de qualidade e regular'
+      ],
+      color: 'yellow',
+      icon: '⚠️'
+    },
+    alta: {
+      level: 'alta',
+      title: 'Inflamação Alta',
+      description: 'Seus sintomas indicam níveis elevados de inflamação intestinal. É importante buscar orientação profissional para investigar as causas e implementar um tratamento adequado.',
+      recommendations: [
+        'Procure um médico ou nutricionista especializado urgentemente',
+        'Investigue possíveis sensibilidades alimentares (glúten, lactose, etc.)',
+        'Implemente um protocolo anti-inflamatório orientado',
+        'Priorize sono de qualidade e redução significativa de estresse',
+        'Considere exames complementares (microbiota, alergias, etc.)',
+        'Evite automedicação e busque acompanhamento profissional'
+      ],
+      color: 'red',
+      icon: '🔥'
+    }
+  }
+
+  return messages[level]
 }

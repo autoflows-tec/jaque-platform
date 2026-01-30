@@ -73,8 +73,8 @@ const submitQuiz = async () => {
   const result = await quizStore.createQuizResponse(responses.value as QuizResponses, true)
 
   if (result.success) {
-    // Redirecionar para perfil após sucesso
-    router.push('/perfil')
+    // Redirecionar para página de resultado
+    router.push(`/quiz/resultado/${result.data.id}`)
   } else {
     alert('Erro ao salvar quiz. Tente novamente.')
   }
