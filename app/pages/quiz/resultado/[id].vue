@@ -2,7 +2,7 @@
 import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/vue/24/outline'
 import QuizResultCard from '~/components/QuizResultCard.vue'
 import { useQuizStore } from '~/stores/useQuizStore'
-import { getInflammationLevel, getInflammationMessage } from '~/../../shared/types/Quiz'
+import { getInflammationLevel, getInflammationMessage } from '../../../../shared/types/Quiz'
 
 definePageMeta({
   layout: 'main-layout',
