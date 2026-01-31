@@ -15,6 +15,9 @@ const router = useRouter()
 // Estado do formulário
 const currentStep = ref(0)
 const responses = ref<Partial<QuizResponses>>({})
+const isSubmitting = ref(false)
+const showResultModal = ref(false)
+const quizResult = ref<any>(null)
 
 // Total de perguntas
 const totalQuestions = QUIZ_QUESTIONS.length
@@ -55,28 +58,64 @@ const previousQuestion = () => {
 
 // Finalizar quiz (sempre criar NOVO registro)
 const submitQuiz = async () => {
-  // Validar se todas as perguntas foram respondidas
-  const allAnswered = QUIZ_QUESTIONS.every(q => {
-    const answer = responses.value[q.id as keyof QuizResponses]
-    if (q.type === 'multiple') {
-      return Array.isArray(answer) && answer.length > 0
-    }
-    return !!answer
-  })
-
-  if (!allAnswered) {
-    alert('Por favor, responda todas as perguntas antes de finalizar.')
+  // Prevenir múltiplos cliques
+  if (isSubmitting.value) {
+    console.log('⚠️ Já está enviando...')
     return
   }
 
-  // Criar NOVO quiz no Supabase (nunca atualiza)
-  const result = await quizStore.createQuizResponse(responses.value as QuizResponses, true)
+  try {
+    isSubmitting.value = true
 
-  if (result.success) {
-    // Redirecionar para página de resultado
-    router.push(`/quiz/resultado/${result.data.id}`)
-  } else {
-    alert('Erro ao salvar quiz. Tente novamente.')
+    // Validar se todas as perguntas foram respondidas
+    const allAnswered = QUIZ_QUESTIONS.every(q => {
+      const answer = responses.value[q.id as keyof QuizResponses]
+      if (q.type === 'multiple') {
+        return Array.isArray(answer) && answer.length > 0
+      }
+      return !!answer
+    })
+
+    if (!allAnswered) {
+      alert('Por favor, responda todas as perguntas antes de finalizar.')
+      isSubmitting.value = false
+      return
+    }
+
+    console.log('Enviando respostas:', responses.value)
+
+    // Criar NOVO quiz no Supabase (nunca atualiza)
+    const result = await quizStore.createQuizResponse(responses.value as QuizResponses, true)
+
+    console.log('Resultado da criação:', result)
+
+    if (result.success && result.data) {
+      console.log('✅ Quiz salvo! ID:', result.data.id)
+
+      // Calcular resultado
+      const totalScore = result.data.total_score
+      const inflammationLevel = getInflammationLevel(totalScore)
+      const inflammationMessage = getInflammationMessage(inflammationLevel)
+
+      // Armazenar resultado e mostrar modal
+      quizResult.value = {
+        id: result.data.id,
+        score: totalScore,
+        level: inflammationLevel,
+        message: inflammationMessage
+      }
+
+      showResultModal.value = true
+      isSubmitting.value = false
+    } else {
+      console.error('Erro ao salvar quiz:', result.error || 'Erro desconhecido')
+      alert(`Erro ao salvar quiz: ${result.error || 'Tente novamente.'}`)
+      isSubmitting.value = false
+    }
+  } catch (error) {
+    console.error('Erro ao submeter quiz:', error)
+    alert('Erro inesperado ao salvar quiz. Tente novamente.')
+    isSubmitting.value = false
   }
 }
 
@@ -144,10 +183,10 @@ const updateResponse = (questionId: string, value: string | string[]) => {
           <BaseButton
             v-else
             variant="accent"
-            :disabled="!isCurrentQuestionAnswered || quizStore.loading"
+            :disabled="!isCurrentQuestionAnswered || isSubmitting"
             @click="submitQuiz"
           >
-            {{ quizStore.loading ? 'Salvando...' : 'Finalizar Quiz' }}
+            {{ isSubmitting ? 'Salvando...' : 'Finalizar Quiz' }}
           </BaseButton>
         </div>
 
@@ -164,6 +203,63 @@ const updateResponse = (questionId: string, value: string | string[]) => {
       <p class="text-center text-sm text-muted-foreground mt-6">
         Suas respostas nos ajudarão a personalizar sua experiência na plataforma
       </p>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div
+      v-if="showResultModal && quizResult"
+      id="result-modal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      @click.self="showResultModal = false"
+    >
+      <div class="bg-card max-w-3xl w-full rounded-lg shadow-2xl border border-border max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="sticky top-0 bg-card border-b border-border p-6 flex items-center justify-between">
+          <h2 class="text-2xl font-bold text-foreground">Resultado do Quiz</h2>
+          <button
+            class="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted"
+            @click="showResultModal = false"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="p-6">
+          <QuizResultCard
+            :score="quizResult.score"
+            :result="quizResult.message"
+          />
+
+          <!-- Ações -->
+          <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <BaseButton
+              variant="outline"
+              class="flex-1"
+              @click="showResultModal = false"
+            >
+              Fechar
+            </BaseButton>
+
+            <BaseButton
+              variant="accent"
+              class="flex-1"
+              @click="router.push('/perfil')"
+            >
+              Ir para Meu Perfil
+            </BaseButton>
+          </div>
+
+          <!-- Nota informativa -->
+          <div class="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+            <p class="text-sm text-muted-foreground">
+              <strong class="text-foreground">Nota:</strong> Este resultado é baseado nas suas respostas e serve como uma orientação inicial. Para um diagnóstico preciso e tratamento adequado, consulte sempre um profissional de saúde qualificado.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

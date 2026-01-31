@@ -5,8 +5,7 @@ import { useQuizStore } from '~/stores/useQuizStore'
 import { getInflammationLevel, getInflammationMessage } from '../../../../shared/types/Quiz'
 
 definePageMeta({
-  layout: 'main-layout',
-  middleware: 'auth'
+  layout: 'main-layout'
 })
 
 const route = useRoute()

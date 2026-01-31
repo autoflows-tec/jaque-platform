@@ -10,9 +10,9 @@ definePageMeta({
   layout: 'main-layout'
 })
 
-// Handler para WhatsApp (placeholder sem link por enquanto)
+// Handler para WhatsApp
 const handleWhatsAppClick = () => {
-  alert('Em breve: link direto para o WhatsApp de suporte será configurado!')
+  window.open('https://api.whatsapp.com/send/?phone=5548984299163', '_blank')
 }
 </script>
 

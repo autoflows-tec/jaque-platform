@@ -4,7 +4,7 @@ interface QuizQuestionProps {
   question: string
   type: 'yesno' | 'single' | 'multiple'
   options: Array<{ value: string; label: string }>
-  modelValue: string | string[]
+  modelValue?: string | string[] | undefined
 }
 
 interface QuizQuestionEmits {
@@ -50,6 +50,7 @@ const selectSingleOption = (value: string) => {
 
 // Verificar se opção está selecionada
 const isSelected = (value: string): boolean => {
+  if (!props.modelValue) return false
   if (props.type === 'multiple') {
     return Array.isArray(props.modelValue) && props.modelValue.includes(value)
   }

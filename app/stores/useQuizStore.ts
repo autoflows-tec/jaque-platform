@@ -109,18 +109,28 @@ export const useQuizStore = defineStore('quiz', () => {
 
   // Criar NOVO quiz (sempre cria, nunca atualiza)
   const createQuizResponse = async (responses: QuizResponses, isCompleted: boolean = false) => {
+    console.log('🔵 [QuizStore] Iniciando createQuizResponse...')
+    console.log('🔵 [QuizStore] User value:', user.value)
+
     if (!user.value?.id && !user.value?.sub) {
-      error.value = 'Usuário não autenticado'
-      return { success: false }
+      const errorMsg = 'Usuário não autenticado'
+      console.error('🔴 [QuizStore] Erro:', errorMsg)
+      error.value = errorMsg
+      return { success: false, error: errorMsg }
     }
 
     const userId = user.value?.id || user.value?.sub
+    console.log('🔵 [QuizStore] User ID:', userId)
+
     const totalScore = calculateQuizScore(responses)
+    console.log('🔵 [QuizStore] Total Score:', totalScore)
+    console.log('🔵 [QuizStore] Responses:', responses)
 
     loading.value = true
     error.value = null
 
     try {
+      console.log('🔵 [QuizStore] Inserindo no Supabase...')
       const { data, error: insertError } = await supabase
         .from('quiz_responses')
         .insert({
@@ -132,18 +142,29 @@ export const useQuizStore = defineStore('quiz', () => {
         .select()
         .single()
 
-      if (insertError) throw insertError
+      console.log('🔵 [QuizStore] Resultado da inserção - Data:', data)
+      console.log('🔵 [QuizStore] Resultado da inserção - Error:', insertError)
+
+      if (insertError) {
+        console.error('🔴 [QuizStore] Erro do Supabase:', insertError)
+        throw insertError
+      }
 
       // Atualizar histórico
+      console.log('🔵 [QuizStore] Atualizando histórico...')
       await fetchQuizHistory()
 
+      console.log('✅ [QuizStore] Quiz criado com sucesso! ID:', data?.id)
       return { success: true, data }
     } catch (err: any) {
-      console.error('Erro ao criar quiz:', err)
-      error.value = err.message
-      return { success: false, error: err.message }
+      console.error('🔴 [QuizStore] Erro capturado no catch:', err)
+      console.error('🔴 [QuizStore] Tipo do erro:', typeof err)
+      console.error('🔴 [QuizStore] Stack trace:', err.stack)
+      error.value = err.message || 'Erro desconhecido'
+      return { success: false, error: err.message || 'Erro desconhecido' }
     } finally {
       loading.value = false
+      console.log('🔵 [QuizStore] Finalizando createQuizResponse')
     }
   }
 
