@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type {
   ShoppingListWithFavorite,
   ShoppingListCreateInput,
@@ -10,6 +11,7 @@ import type {
 export const useShoppingListsStore = defineStore('shoppingLists', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+  const { logActivity } = useActivityLogger()
 
   const shoppingLists = ref<ShoppingListWithFavorite[]>([])
   const currentShoppingList = ref<ShoppingListWithFavorite | null>(null)
@@ -168,6 +170,12 @@ export const useShoppingListsStore = defineStore('shoppingLists', () => {
 
       if (createError) throw createError
 
+      // Registrar log de atividade
+      await logActivity(ActivityType.SHOPPING_LIST_CREATED, {
+        list_id: data.id,
+        list_title: data.title
+      })
+
       return { success: true, data }
     } catch (err: any) {
       error.value = err.message || 'Erro ao criar lista de compras'
@@ -193,6 +201,9 @@ export const useShoppingListsStore = defineStore('shoppingLists', () => {
 
       if (updateError) throw updateError
 
+      // Registrar log de atividade
+      await logActivity(ActivityType.SHOPPING_LIST_UPDATED, { list_id: id })
+
       return { success: true, data }
     } catch (err: any) {
       error.value = err.message || 'Erro ao atualizar lista de compras'
@@ -215,6 +226,9 @@ export const useShoppingListsStore = defineStore('shoppingLists', () => {
         .eq('id', id)
 
       if (deleteError) throw deleteError
+
+      // Registrar log de atividade
+      await logActivity(ActivityType.SHOPPING_LIST_DELETED, { list_id: id })
 
       // Remover da lista local
       shoppingLists.value = shoppingLists.value.filter(list => list.id !== id)

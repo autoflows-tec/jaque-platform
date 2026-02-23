@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useChatIA } from '~/composables/useChatIA'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type {
   ChatConversation,
   ChatMessage,
@@ -13,6 +14,7 @@ export const useChatStore = defineStore('chat', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
   const { sendToWebhook } = useChatIA()
+  const { logActivity } = useActivityLogger()
 
   // Estado
   const conversations = ref<ChatConversation[]>([])
@@ -90,6 +92,11 @@ export const useChatStore = defineStore('chat', () => {
 
       if (insertError) throw insertError
 
+      // Registrar log de atividade
+      await logActivity(ActivityType.CHAT_CONVERSATION_CREATED, {
+        conversation_id: data.id
+      })
+
       conversations.value = [data, ...conversations.value]
       currentConversation.value = data
 
@@ -155,6 +162,11 @@ export const useChatStore = defineStore('chat', () => {
         .eq('id', id)
 
       if (deleteError) throw deleteError
+
+      // Registrar log de atividade
+      await logActivity(ActivityType.CHAT_CONVERSATION_DELETED, {
+        conversation_id: id
+      })
 
       // Remover da lista
       conversations.value = conversations.value.filter(c => c.id !== id)
@@ -259,6 +271,12 @@ export const useChatStore = defineStore('chat', () => {
         .single()
 
       if (userError) throw userError
+
+      // Registrar log de atividade
+      await logActivity(ActivityType.CHAT_MESSAGE_SENT, {
+        conversation_id: conversationId,
+        message_length: content.trim().length
+      })
 
       // Adicionar mensagem do usuário ao estado (optimistic UI)
       messages.value.push(userMessage)
