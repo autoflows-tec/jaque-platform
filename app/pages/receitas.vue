@@ -7,6 +7,8 @@ import RecipeDetailModal from '~/components/RecipeDetailModal.vue'
 import AdminRecipeForm from '~/components/AdminRecipeForm.vue'
 import { useRecipesStore } from '~/stores/useRecipesStore'
 import { useUserStore } from '~/stores/useUserStore'
+import { useActivityLogger } from '~/composables/useActivityLogger'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type { RecipeFilters as RecipeFiltersType, RecipeWithFavorite } from '../../shared/types/Recipe'
 
 definePageMeta({
@@ -16,6 +18,7 @@ definePageMeta({
 const recipesStore = useRecipesStore()
 const userStore = useUserStore()
 const user = useSupabaseUser()
+const { logActivity } = useActivityLogger()
 
 const selectedRecipe = ref<RecipeWithFavorite | null>(null)
 const showDetailModal = ref(false)
@@ -95,12 +98,18 @@ const handleOpenRecipe = async (recipe: RecipeWithFavorite) => {
 
 // Favoritar receita
 const handleFavoriteRecipe = async (recipeId: number) => {
-  await recipesStore.favoriteRecipe(recipeId)
+  const result = await recipesStore.favoriteRecipe(recipeId)
+  if (result.success) {
+    await logActivity(ActivityType.RECIPE_FAVORITED, { recipe_id: recipeId })
+  }
 }
 
 // Desfavoritar receita
 const handleUnfavoriteRecipe = async (recipeId: number) => {
-  await recipesStore.unfavoriteRecipe(recipeId)
+  const result = await recipesStore.unfavoriteRecipe(recipeId)
+  if (result.success) {
+    await logActivity(ActivityType.RECIPE_UNFAVORITED, { recipe_id: recipeId })
+  }
 }
 
 // Abrir formulário para nova receita

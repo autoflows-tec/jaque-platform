@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type {
   RecipeWithFavorite,
   RecipeCreateInput,
@@ -11,6 +12,7 @@ import type {
 export const useRecipesStore = defineStore('recipes', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+  const { logActivity } = useActivityLogger()
 
   const recipes = ref<RecipeWithFavorite[]>([])
   const jaqueRecipes = ref<RecipeWithFavorite[]>([])
@@ -271,6 +273,12 @@ export const useRecipesStore = defineStore('recipes', () => {
 
       if (insertError) throw insertError
 
+      // Registrar log de atividade
+      await logActivity(ActivityType.RECIPE_CREATED, {
+        recipe_id: data.id,
+        recipe_title: data.title
+      })
+
       // Sempre adicionar ao início da lista (usuário verá suas próprias receitas)
       recipes.value = [{ ...data, user_has_favorited: false }, ...recipes.value]
 
@@ -293,6 +301,11 @@ export const useRecipesStore = defineStore('recipes', () => {
         .single()
 
       if (updateError) throw updateError
+
+      // Registrar log de atividade
+      await logActivity(ActivityType.RECIPE_UPDATED, {
+        recipe_id: recipeId
+      })
 
       // Atualizar na lista local
       const index = recipes.value.findIndex(r => r.id === recipeId)
@@ -328,6 +341,11 @@ export const useRecipesStore = defineStore('recipes', () => {
         .eq('id', recipeId)
 
       if (deleteError) throw deleteError
+
+      // Registrar log de atividade
+      await logActivity(ActivityType.RECIPE_DELETED, {
+        recipe_id: recipeId
+      })
 
       // Remover da lista local
       recipes.value = recipes.value.filter(r => r.id !== recipeId)

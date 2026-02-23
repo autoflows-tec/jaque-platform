@@ -6,6 +6,8 @@ import ShoppingListDetailModal from '~/components/ShoppingListDetailModal.vue'
 import AdminShoppingListForm from '~/components/AdminShoppingListForm.vue'
 import { useShoppingListsStore } from '~/stores/useShoppingListsStore'
 import { useUserStore } from '~/stores/useUserStore'
+import { useActivityLogger } from '~/composables/useActivityLogger'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type { ShoppingListFilters as ShoppingListFiltersType, ShoppingListWithFavorite } from '../../shared/types/ShoppingList'
 
 definePageMeta({
@@ -14,6 +16,7 @@ definePageMeta({
 
 const shoppingListsStore = useShoppingListsStore()
 const userStore = useUserStore()
+const { logActivity } = useActivityLogger()
 
 const selectedList = ref<ShoppingListWithFavorite | null>(null)
 const showDetailModal = ref(false)
@@ -47,12 +50,18 @@ const handleOpenList = async (list: ShoppingListWithFavorite) => {
 
 // Favoritar lista
 const handleFavoriteList = async (listId: number) => {
-  await shoppingListsStore.favoriteShoppingList(listId)
+  const result = await shoppingListsStore.favoriteShoppingList(listId)
+  if (result.success) {
+    await logActivity(ActivityType.SHOPPING_LIST_FAVORITED, { list_id: listId })
+  }
 }
 
 // Desfavoritar lista
 const handleUnfavoriteList = async (listId: number) => {
-  await shoppingListsStore.unfavoriteShoppingList(listId)
+  const result = await shoppingListsStore.unfavoriteShoppingList(listId)
+  if (result.success) {
+    await logActivity(ActivityType.SHOPPING_LIST_UNFAVORITED, { list_id: listId })
+  }
 }
 
 // Abrir formulário para nova lista

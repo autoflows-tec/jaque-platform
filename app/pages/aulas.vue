@@ -6,6 +6,8 @@ import VideoPlayerModal from '~/components/VideoPlayerModal.vue'
 import BaseButton from '~/components/BaseButton.vue'
 import { useModulesStore } from '~/stores/useModulesStore'
 import { useUserStore } from '~/stores/useUserStore'
+import { useActivityLogger } from '~/composables/useActivityLogger'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import type { Module } from '../../shared/types/Module'
 import type { Lesson } from '../../shared/types/Lesson'
 
@@ -15,6 +17,7 @@ definePageMeta({
 
 const modulesStore = useModulesStore()
 const userStore = useUserStore()
+const { logActivity } = useActivityLogger()
 
 // Estados dos modais
 const showModuleForm = ref(false)
@@ -118,12 +121,19 @@ const handleLessonFormSubmit = async (data: any) => {
 }
 
 // Handler de play - integração com Panda Video
-const handlePlayLesson = (lesson: Lesson) => {
+const handlePlayLesson = async (lesson: Lesson) => {
   // Verificar se a aula tem vídeo configurado
   if (!lesson.panda_video_url || lesson.panda_video_url.trim() === '') {
     alert(`A aula "${lesson.title}" ainda não possui um vídeo configurado. Entre em contato com o administrador.`)
     return
   }
+
+  // Registrar log de atividade
+  await logActivity(ActivityType.LESSON_WATCHED, {
+    lesson_id: lesson.id,
+    lesson_title: lesson.title,
+    module_id: lesson.module_id
+  })
 
   // Abrir modal de vídeo
   selectedLesson.value = lesson
