@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import { useActivityLogger } from '~/composables/useActivityLogger'
-import { ActivityType } from '~/shared/types/ActivityLog'
+import { ActivityType } from '../../shared/types/ActivityLog'
 import { navigateTo } from '#app'
 
 export const useLoginForm = () => {

@@ -1,4 +1,4 @@
-import type { ActivityType, ActivityLogCreateInput } from '~/shared/types/ActivityLog'
+import type { ActivityType, ActivityLogCreateInput } from '../../shared/types/ActivityLog'
 
 /**
  * Composable para registrar atividades do usuário

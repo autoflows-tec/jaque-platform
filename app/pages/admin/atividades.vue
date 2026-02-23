@@ -232,7 +232,7 @@ import {
   getActivityTypeColor,
   formatActivityDate,
   ActivityType
-} from '~/shared/types/ActivityLog'
+} from '../../../shared/types/ActivityLog'
 
 const activityLogsStore = useActivityLogsStore()
 const userStore = useUserStore()
