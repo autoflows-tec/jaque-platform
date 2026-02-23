@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import type { QuizResponses, QuizResponse, QuizHistoryItem } from '../../shared/types/Quiz'
 import { calculateQuizScore } from '../../shared/types/Quiz'
+import { ActivityType } from '../../shared/types/ActivityLog'
 
 export const useQuizStore = defineStore('quiz', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+  const { logActivity } = useActivityLogger()
 
   const quizHistory = ref<QuizHistoryItem[]>([])
   const currentQuizDetail = ref<QuizResponse | null>(null)
@@ -150,6 +152,18 @@ export const useQuizStore = defineStore('quiz', () => {
         throw insertError
       }
 
+      // Registrar atividade
+      if (isCompleted) {
+        await logActivity(ActivityType.QUIZ_COMPLETED, {
+          quiz_id: data?.id,
+          total_score: totalScore
+        })
+      } else {
+        await logActivity(ActivityType.QUIZ_STARTED, {
+          quiz_id: data?.id
+        })
+      }
+
       // Atualizar histórico
       console.log('🔵 [QuizStore] Atualizando histórico...')
       await fetchQuizHistory()
@@ -180,6 +194,9 @@ export const useQuizStore = defineStore('quiz', () => {
         .eq('id', quizId)
 
       if (deleteError) throw deleteError
+
+      // Registrar atividade
+      await logActivity(ActivityType.QUIZ_DELETED, { quiz_id: quizId })
 
       // Atualizar histórico
       await fetchQuizHistory()

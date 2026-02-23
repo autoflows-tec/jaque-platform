@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuth } from '~/composables/useAuth'
+import { useUserStore } from '~/stores/useUserStore'
 import {
   HomeIcon,
   AcademicCapIcon,
@@ -13,12 +14,17 @@ import {
   SparklesIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
-  XMarkIcon
+  XMarkIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/vue/24/outline'
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import type { FunctionalComponent } from 'vue'
 
 const { logout } = useAuth()
+const userStore = useUserStore()
+
+// Verificar se usuário é admin
+const isAdmin = computed(() => userStore.profile?.role === 'admin')
 
 interface MenuItem {
   name: string
@@ -82,6 +88,17 @@ const closeMobileMenu = () => {
       >
         <component :is="item.icon" class="w-5 h-5" />
         <span>{{ item.name }}</span>
+      </NuxtLink>
+
+      <!-- Link Admin - Atividades (apenas para admins) -->
+      <NuxtLink
+        v-if="isAdmin"
+        to="/admin/atividades"
+        class="flex items-center gap-3 px-6 py-3 text-sm text-foreground hover:bg-muted transition-colors border-t border-border mt-2 pt-4"
+        active-class="bg-primary text-primary-foreground hover:bg-primary/90"
+      >
+        <ClipboardDocumentCheckIcon class="w-5 h-5" />
+        <span>Atividades (Admin)</span>
       </NuxtLink>
     </nav>
 
@@ -155,6 +172,18 @@ const closeMobileMenu = () => {
                 >
                   <component :is="item.icon" class="w-5 h-5" />
                   <span>{{ item.name }}</span>
+                </NuxtLink>
+
+                <!-- Link Admin - Atividades (apenas para admins) -->
+                <NuxtLink
+                  v-if="isAdmin"
+                  to="/admin/atividades"
+                  class="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted rounded-md transition-colors mb-1 border-t border-border mt-2 pt-4"
+                  active-class="bg-primary text-primary-foreground hover:bg-primary/90"
+                  @click="closeMobileMenu"
+                >
+                  <ClipboardDocumentCheckIcon class="w-5 h-5" />
+                  <span>Atividades (Admin)</span>
                 </NuxtLink>
               </nav>
 

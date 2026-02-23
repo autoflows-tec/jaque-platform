@@ -1,9 +1,12 @@
 import { ref } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import { useActivityLogger } from '~/composables/useActivityLogger'
+import { ActivityType } from '~/shared/types/ActivityLog'
 import { navigateTo } from '#app'
 
 export const useLoginForm = () => {
   const { login, signup, loading, error } = useAuth()
+  const { logActivity } = useActivityLogger()
 
   // Estado das abas
   const activeTab = ref<'login' | 'signup'>('login')
@@ -23,6 +26,9 @@ export const useLoginForm = () => {
     const result = await login(loginEmail.value, loginPassword.value)
 
     if (result.success) {
+      // Registrar atividade de login
+      await logActivity(ActivityType.LOGIN)
+
       // Aguardar um pouco para sessão ser estabelecida
       await new Promise(resolve => setTimeout(resolve, 500))
       // Forçar reload completo da página para garantir que o middleware pegue o user
@@ -45,6 +51,9 @@ export const useLoginForm = () => {
     const result = await signup(signupEmail.value, signupPassword.value, signupName.value)
 
     if (result.success) {
+      // Registrar atividade de cadastro
+      await logActivity(ActivityType.SIGNUP, { name: signupName.value })
+
       // Aguardar um pouco para sessão ser estabelecida
       await new Promise(resolve => setTimeout(resolve, 500))
       // Redirecionar para quiz após cadastro
