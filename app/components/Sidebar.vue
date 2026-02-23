@@ -23,8 +23,16 @@ import type { FunctionalComponent } from 'vue'
 const { logout } = useAuth()
 const userStore = useUserStore()
 
+// Carregar perfil do usuário
+onMounted(async () => {
+  await userStore.fetchProfile()
+})
+
 // Verificar se usuário é admin
-const isAdmin = computed(() => userStore.profile?.role === 'admin')
+const isAdmin = computed(() => {
+  console.log('🔍 Verificando admin - profile:', userStore.profile)
+  return userStore.profile?.role === 'admin'
+})
 
 interface MenuItem {
   name: string

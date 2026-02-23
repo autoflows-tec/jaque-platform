@@ -297,7 +297,7 @@ const goToPrevPage = () => {
 
 // Verificar se usuário é admin
 onMounted(async () => {
-  await userStore.fetchUserProfile()
+  await userStore.fetchProfile()
 
   if (userStore.profile?.role !== 'admin') {
     navigateTo('/')
