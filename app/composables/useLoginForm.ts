@@ -26,11 +26,12 @@ export const useLoginForm = () => {
     const result = await login(loginEmail.value, loginPassword.value)
 
     if (result.success) {
-      // Registrar atividade de login
-      await logActivity(ActivityType.LOGIN)
-
       // Aguardar um pouco para sessão ser estabelecida
       await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Registrar atividade de login (após sessão estabelecida)
+      await logActivity(ActivityType.LOGIN)
+
       // Forçar reload completo da página para garantir que o middleware pegue o user
       window.location.href = '/'
     }
@@ -51,11 +52,12 @@ export const useLoginForm = () => {
     const result = await signup(signupEmail.value, signupPassword.value, signupName.value)
 
     if (result.success) {
-      // Registrar atividade de cadastro
-      await logActivity(ActivityType.SIGNUP, { name: signupName.value })
-
       // Aguardar um pouco para sessão ser estabelecida
       await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Registrar atividade de cadastro (após sessão estabelecida)
+      await logActivity(ActivityType.SIGNUP, { name: signupName.value })
+
       // Redirecionar para quiz após cadastro
       window.location.href = '/quiz'
     }
