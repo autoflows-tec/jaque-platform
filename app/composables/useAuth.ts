@@ -46,7 +46,8 @@ export const useAuth = () => {
         options: {
           data: {
             name
-          }
+          },
+          emailRedirectTo: undefined // Não envia email de confirmação
         }
       })
 
